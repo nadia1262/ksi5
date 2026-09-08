@@ -11,6 +11,10 @@ default block_reason = ""
 # --- 2. HARD VIOLATION LOGIC (BOLA Detection) ---
 # Membandingkan tenant_id yang ada di JWT (Identitas) dengan tenant_id dari URL API (Resource)
 is_hard_violation {
+    not input.jwt.tenant_id
+}
+
+is_hard_violation {
     input.jwt.tenant_id != input.resource.tenant_id
 }
 
