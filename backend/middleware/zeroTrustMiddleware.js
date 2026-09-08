@@ -80,9 +80,11 @@ async function collectContext(req, redisClient) {
     const velocityKey = `velocity:${tenantId}:${ip}`;
     let isHighVelocity = false;
 
+    let count = 0;
+
     if (redisClient) {
         try {
-            const count = await redisClient.incr(velocityKey);
+            count = await redisClient.incr(velocityKey);
             if (count === 1) {
                 // Set expiry 60 detik untuk window velocity
                 await redisClient.expire(velocityKey, 60);
@@ -100,6 +102,7 @@ async function collectContext(req, redisClient) {
         is_new_ip: isNewIp,
         is_off_hours: isOffHours,
         is_high_velocity: isHighVelocity,
+        velocity_count: count,
     };
 }
 
