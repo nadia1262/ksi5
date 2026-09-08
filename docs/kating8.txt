@@ -1,0 +1,580 @@
+Implementasi dan Analisis Hardening Sistem Operasi Ubuntu 
+terhadap Serangan Port Scanning dan Brute Force SSH 
+ 
+ 
+Disusun oleh :  
+3SI1 Kelompok 8 
+Alvin Jeremy Naiborhu           (222212488)  
+Bara Reyhan Dary ​
+​
+(222212533) 
+Dwi Alfani Merlia​
+​
+(222212575) 
+Novia Ade Yuanita​
+​
+(222212802) 
+ 
+ 
+POLITEKNIK STATISTIKA STIS 
+PROGRAM STUDI KOMPUTASI STATISTIK  
+TAHUN AKADEMIK 2024/2025 
+Daftar Isi 
+1. Pendahuluan​
+3 
+2. Kajian Pustaka​
+4 
+2.1 Keamanan Sistem Operasi​
+4 
+2.2 Prinsip-prinsip Keamanan Sistem Operasi​
+4 
+2.3 Linux Ubuntu​
+5 
+2.4 Fitur Keamanan Ubuntu​
+5 
+2.5 Port Scanning​
+6 
+2.6 Brute Force SSH​
+7 
+2.7 Hardening​
+7 
+3. Metodologi​
+8 
+3.1 Lingkungan Eksperimen​
+8 
+3.2 Instrumen Penelitian​
+8 
+3.3 Pengumpulan dan Analisis Data​
+8 
+4. Implementasi​
+9 
+4.1 Konfigurasi Awal Sistem​
+9 
+4.2 Simulasi Serangan Sebelum Hardening​
+10 
+4.2.1 Simulasi Pemindaian Port (Port Scanning)​
+10 
+4.2.1 Simulasi Serangan Brute Force​
+10 
+4.3 Implementasi Teknik Hardening​
+11 
+4.3.1 Konfigurasi Firewall menggunakan UFW​
+12 
+4.3.2 Konfigurasi Layanan SSH​
+12 
+4.3.3 Instalasi dan Konfigurasi Fail2Ban​
+13 
+4.4 Simulasi Serangan Setelah Hardening​
+14 
+4.4.1 Simulasi Port Scanning​
+14 
+4.4.2 Simulasi Brute Force SSH​
+14 
+4.5 Analisis Log Sistem​
+16 
+4.5.1 Log Otentikasi (auth.log)​
+16 
+4.5.2 Log Fail2ban (fail2ban.log)​
+16 
+4.5.3 Log UFW (ufw.log)​
+16 
+5. Hasil dan Pembahasan​
+16 
+6. Kesimpulan​
+17 
+7. Daftar Pustaka​
+18 
+ 
+ 
+ 
+1.​ Pendahuluan 
+Era digitalisasi membuat teknologi informasi menjadi salah satu komponen 
+integral dalam berbagai sektor[1]. Hal ini yang mendorong adanya perkembangan 
+teknologi di era industri 4.0 dengan adanya peningkatan trafik jaringan internet yang 
+digunakan oleh masyarakat secara signifikan[2]. Perkembangan ini juga mendorong 
+adanya komunikasi data yang dapat dilakukan melalui sistem jaringan yang 
+terintegrasi. Selaras dengan hal tersebut, menjaga keamanan suatu jaringan menjadi hal 
+yang sangat penting untuk mengatasi adanya ancaman siber [3], karena pada dasarnya, 
+sistem topologi jaringan komputer itu sendiri sudah mempunyai kelemahan. Beberapa 
+jenis serangan siber yang paling umum terjadi adalah port scanning dan brute force  SSH.  
+Port Scanning merupakan jenis serangan yang dilakukan melalui pencarian open 
+port dalam sebuah jaringan komputer, yang pada akhirnya hasil scan ini nantinya dapat 
+digunakan untuk mengetahui letak kelemahan dari sebuah sistem komputer[4]. 
+Sementara itu, brute force  merupakan taktik yang digunakan oleh para peretas untuk 
+mengakses jaringan yang tidak sah menggunakan secure shell (SSH)[5].  SSH sendiri 
+merupakan protokol jaringan yang memungkinkan adanya pertukaran data antara dua 
+perangkat jaringan. Kelemahan dari SSH dalam sebuah sistem operasi adalah adanya 
+izin login langsung ke root menggunakan beberapa teknik enumeration untuk 
+memecahkan password[3]. Keberhasilan dari serangan brute force  
+ ini dapat 
+menyebabkan adanya akses penuh ke server, pencurian data sensitif, penyebaran 
+malware, dan dapat mengurangi performa sebuah server yang menjadi sasaran 
+peretasan.  
+Sistem operasi merupakan salah satu perangkat lunak utama dalam sebuah 
+sistem komputer, yang bertindak sebagai penghubung antara pengguna, perangkat 
+lunak aplikasi, serta perangkat keras komputer[6]. Fungsi utama dari sistem operasi 
+adalah kemampuannya untuk menjalankan beberapa tugas secara bersamaan seperti 
+pada desktop, server, maupun perangkat bergerak. Salah satu jenis sistem operasi 
+adalah Linux Ubuntu yang merupakan sistem operasi bersifat open source, dan 
+memiliki keamanan tingkat tinggi. Namun, tidak sepenuhnya sistem yang mempunyai 
+klaim keamanan itu akan rentan dari ancaman siber seperti port scanning dan brute force 
+SSH, terlebih jika tahapan hardening yang diterapkan belum tepat.  
+Oleh karena urgensi perlindungan sistem operasi Linux Ubuntu dari serangan 
+port scanning dan brute force SSH,  maka dari itu penelitian ini akan berfokus pada 
+implementasi teknik hardening yang relevan. Sehingga, diharapkan penelitian ini akan 
+dapat menyajikan panduan praktis dan evaluasi mengenai sejauh mana tahapan  
+hardening yang dilakukan dapat meningkatkan ketahanan sistem operasi Linux Ubuntu 
+terhadap dua jenis serangan tersebut.  
+2.​ Kajian Pustaka 
+2.1 Keamanan Sistem Operasi 
+Keamanan sistem operasi adalah perlindungan terhadap suatu sistem komputer dari 
+berbagai ancaman, baik yang disengaja maupun tidak, yang dapat mengakibatkan 
+kerusakan, kehilangan data, maupun gangguan layanan. Sistem operasi bertanggung 
+jawab dalam mengelola berbagai sumber daya komputasi seperti memori, CPU, 
+perangkat I/O, dan file sistem, serta menyediakan layanan inti bagi perangkat lunak. 
+Fungsi sistem operasi yang penting ini menjadikannya sebagai salah satu target utama 
+dalam upaya eksploitasi. 
+Fondasi keamanan sistem operasi bertumpu pada tiga pilar utama keamanan informasi 
+yang disebut dengan CIA Triad. Ketiga komponen dalam CIA Triad ini saling berkaitan 
+dan menjadi dasar dalam merancang kebijakan serta sistem keamanan yang efektif[7]. 
+Tiga pilar CIA Triad adalah: 
+1)​ Kerahasiaan (Confidentiality) 
+Kerahasiaan merupakan suatu pilar yang memastikan bahwa informasi hanya 
+dapat diakses oleh pihak yang berwenang. Hal ini melibatkan adanya 
+penggunaan mekanisme kontrol akses dan enkripsi untuk mencegah terjadinya 
+pengungkapan data secara tidak sah. 
+2)​ Integritas (Integrity) 
+Integritas merupakan suatu pilar yang menjamin keaslian dan keakuratan suatu 
+data, serta melindungi data dari adanya modifikasi yang tidak sah. Adanya 
+perubahan pada data harus dapat dideteksi dan hanya dapat dilakukan oleh 
+pengguna yang memiliki izin. 
+3)​ Ketersediaan (Availability) 
+Ketersediaan merupakan suatu pilar yang memastikan bahwa suatu sistem dan 
+data dapat selalu tersedia dan dapat diakses oleh pengguna sah saat dibutuhkan. 
+Serangan seperti Denial-of-Service merupakan salah satu contoh ancaman 
+langsung terhadap pilar ketersediaan. 
+2.2 Prinsip-prinsip Keamanan Sistem Operasi 
+Penerapan prinsip-prinsip keamanan merupakan suatu fondasi dalam perancangan 
+sistem operasi yang handal dan tahan terhadap ancaman. Prinsip-prinsip keamanan 
+memberikan pendoman dalam merancang suatu sistem dengan membatasi akses, 
+mencegah penyalahgunaan hak, dan mendeteksi serta merespon aktivitas yang 
+mencurigakan. Prinsip-prinsip keamanan klasik yang dikemukakan oleh Saltzer dan 
+Schroeder[8] masih relevan hingga saat ini terutama dalam konteks implementasi 
+hardening pada sistem operasi Ubuntu.  
+Prinsip-prinsip keamanan yang dikemukakan oleh Saltzer dan Schroeder[8] mencakup 
+delapan prinsip yaitu least privilege, fail-safe defaults, economy of mechanism, complete 
+mediation, open design, separation of privilege, least common mechanism, dan 
+psychological acceptability. Masing-masing prinsip bertujuan untuk meminimalkan 
+risiko serta meningkatkan kendali terhadap akses, otorisasi, dan integritas sistem. 
+Dalam konteks sistem operasi seperti Ubuntu, prinsip-prinsip tersebut membentuk 
+dasar konseptual untuk strategi hardening yang mencakup pembatasan hak, akses, 
+penyederhanaan konfigurasi, dan penguatan kontrol terhadap komponen sistem. 
+2.3 Linux Ubuntu 
+Ubuntu merupakan bagian dari distribusi Linux berbasis Debian yang dikembangkan 
+oleh Canonical Ltd. Sistem operasi Linux Ubuntu ini populer karena bersifat 
+open-source, stabil, aman, dan didukung oleh komunitas pengguna serta pengembang. 
+Ubuntu digunakan secara luas dalam berbagai lingkungan termasuk desktop, server, 
+serta cloud computing. Salah satu keunggulan Ubuntu adalah menyediakan dukungan 
+jangka panjang (LTS) selama lima tahun untuk setiap versinya. Selain itu, Ubuntu 
+memiliki manajemen paket berbasis APT (Advance Packaging Tool) dan menggunakan 
+sistem file yang aman serta kernel Linux yang diperbarui secara berkala. Ini menjadikan 
+Ubuntu sebagai salah satu pilihan utama untuk server serta lingkungan produksi.  
+2.4 Fitur Keamanan Ubuntu 
+Sistem operasi Ubuntu memiliki arsitektur keamanan berlapis yang dirancang untuk 
+melindungi sistem dari berbagai serangan. Secara default, Ubuntu memiliki beberapa 
+fitur-fitur keamanan sebagai berikut[9]: 
+-​
+AppArmor 
+AppArmor merupakan sebuah sistem Mandatory Access Control (MAC) tingkat 
+kernel yang bekerja dengan cara mengikat setiap aplikasi ke sebuah profil 
+keamanan. Profil keamanan ini membatasi akses aplikasi ke file, jaringan, dan 
+sumber daya lainnya untuk meminimalisir adanya kerusakan apabila terjadi 
+eksploitasi pada aplikasi. 
+-​
+UFW (Uncomplicated Firewall) 
+UFW merupakan antarmuka sederhana yang bertujuan untuk mengelola firewall 
+netfilter (iptables). UFW menerapkan prinsip Fail-Secure Defaults dengan 
+menolak semua koneksi masuk dan memastikan bahwa hanya port dan layanan 
+yang secara eksplisit diizinkan yang dapat diakses dari jaringan. 
+-​
+Secure Boot 
+Secure Boot merupakan fitur keamanan firmware yang memastikan bahwa 
+ketika terjadi proses booting, sistem hanya akan mengeksekusi perangkat lunak 
+yang memiliki tanda tangan digital yang sah. Ini merupakan pertahankan krusial 
+terhadap malware tingkat rendah seperti rootkit yang menginfeksi suatu sistem 
+sebelum sistem operasi dapat dimuat sepenuhnya. 
+-​
+Disk Encryption 
+Ubuntu mendukung adanya enkripsi disk secara penuh (Full Disk Encryption) 
+dengan LUKS (Linux Unified Key Setup). Fitur ini dapat diaktifkan saat instalasi 
+untuk melindungi kerahasiaan data at-rest. Artinya, data pada hard drive akan 
+tetap aman dan dapat tetap dibaca meskipun perangkatnya dicuri. 
+-​
+Automatic Security Updates 
+Ubuntu dapat secara otomatis mengunduh serta menerapkan pembaruan 
+keamanan melalui layanan unattended-upgrades. Fitur ini memastikan bahwa 
+sistem akan mendapatkan patch untuk kerentanan yang baru ditemukan tanpa 
+perlu melakukan intervensi manual. 
+2.5 Port Scanning 
+Port scanning merupakan salah metode yang digunakan untuk mengidentifikasi port 
+yang terbuka pada sebuah sistem. Port scanning sering digunakan oleh administrator 
+sistem untuk keperluan audit dan monitoring, tetapi juga sering digunakan oleh 
+penyerang untuk menemukan celah keamanan. Salah satu contoh alat port scanning 
+yang populer adalah Nmap (Network Mapper). Nmap dapat melakukan scanning TCP, 
+UDP, serta deteksi layanan. Penyerang sering menggunakan port scanning sebagai 
+langkah awal dalam fase recognisi serangan, karena menemukan informasi mengenai 
+port yang terbuka dapat mengarahkan penyerang ke dalam eksploitasi layanan tertentu. 
+Berikut ini merupakan beberapa teknik pemindaian yang umum digunakan: 
+-​
+TCP Connect Scan (-sT) 
+Teknik ini merupakan suatu teknik yang paling dasar dengan melakukan 
+three-way handshake TCP secara penuh untuk setiap port target. Teknik ini 
+sangat andal untuk dilakukan namun mudah terdeteksi dan dicatat oleh firewall. 
+-​
+TCP SYN Scan (-sS) 
+Teknik ini sering disebut sebagai half-open scan atau stealth scan. Teknik ini 
+dilakukan 
+dengan 
+cara 
+mengirim 
+paket 
+SYN 
+(synchronize). 
+Apabila 
+mendapatkan balasan SYN/ACK, maka port dianggap terbuka. Sebaliknya, 
+apabila mendapat balasan RST (reset), maka port dianggap tertutup. 
+-​
+UDP Scan(-sU) 
+Teknik ini digunakan untuk memindai port UDP. Pemindaian port UDP ini akan 
+berjalan lebih lambat dan juga lebih sulit untuk diinterpretasikan. 
+2.6 Brute Force SSH 
+Brute Force SSH merupakan salah satu serangan dimana penyerang mencoba menebak 
+kombinasi username dan password untuk dapat masuk ke sistem melalui protokol SSH. 
+Serangan ini umumnya dilakukan ke port 22 dan dapat dilakukan secara otomatis 
+menggunakan tools seperti Hydra atau Medusa dengan menggunakan daftar username 
+dan password. SSH sering menjadi target utama karena protokol ini dapat memberikan 
+akses shell (baris perintah) penuh ke server, yang memungkinkan penyerang untuk 
+dapat mengambil alih sistem sepenuhnya. Serangan ini sangat efektif terhadap server 
+yang menggunakan password yang lemah atau mudah ditebak serta tidak memiliki 
+akses perlindungan terhadap percobaan login secara berlebihan. 
+2.7 Hardening  
+Hardening adalah proses sistematis mengamankan suatu sistem dengan cara 
+mengurangi permukaan serangan (attack surface). Attack surface adalah jumlah total 
+dari semua titik masuk potensial yang dapat dieksploitasi oleh penyerang. Hardening 
+dilakukan dengan tujuan menghilangkan resiko yang tidak perlu dengan cara 
+menonaktifkan layanan yang tidak digunakan, melakukan konfigurasi yang aman, serta 
+membatasi akses. Pendekatan hardening sering kali mengacu pada standar yang telah 
+teruji seperti CIS Benchmarks (center for Internet Security). 
+Untuk mengatasi serangan port scanning dan brute force SSH, tindakan relevan yang 
+dapat digunakan meliputi: 
+1)​ Konfigurasi Firewall 
+Menerapkan aturan firewall yang ketat melalui UFW untuk memblokir semua 
+port masuk secara default dan hanya membuka port yang esensial. 
+2)​ Penguatan Layanan SSH 
+Penguatan layanan SSH dapat dilakukan dengan cara menonaktifkan login root, 
+mengubah port default SSH, menggunakan Public Key Authentication, serta 
+membatasi jumlah percobaan login. 
+3)​ Implementasi Intrusion Prevention System (IPS) 
+Melakukan implementasi IPS dengan menggunakan perangkat lunak seperti 
+Fail2ban yang secara aktif memantau log sistem. Fail2ban bekerja dengan cara 
+mendeteksi percobaan login dari suatu alamat IP. Apabila suatu alamat IP terlalu 
+banyak melakukan percobaan login, maka Fail2ban secara otomatis akan 
+memperbarui aturan firewall untuk memblokir alamat IP tersebut dalam periode 
+tertentu. 
+3.​ Metodologi 
+​
+Penelitian ini menerapkan pendekatan eksperimental untuk menganalisis 
+efektivitas konfigurasi keamanan hardening pada sistem operasi Ubuntu versi 25.04 
+untuk mensimulasikan serangan port scanning dan brute force SSH. Adapun desain 
+eksperimen ini dirancang untuk melakukan perbandingan terhadap kondisi sistem 
+sebelum dan sesudah dilakukan penerapan konfigurasi keamanan (hardening). 
+3.1 Lingkungan Eksperimen 
+Kegiatan eksperimen ini dilakukan pada lingkungan virtualisasi yang akan 
+dikonfigurasi secara khusus. Sistem target yang digunakan adalah sistem operasi 
+Ubuntu yang berperan sebagai server. NAT Network digunakan untuk memfasilitasi 
+komunikasi antar entitas dalam simulasi eksperimen, dan konektivitas jaringan.  
+3.2 Instrumen Penelitian 
+Penelitian ini menggunakan beberapa instrumen penelitian seperti sistem 
+operasi Ubuntu versi 25.04 yang akan berperan sebagai server target dalam simulasi. 
+Virtualbox berperan untuk membangun dan mengelola lingkungan eksperimen. 
+Nmap berperan sebagai tools yang digunakan dalam melakukan pemindaian port 
+dan mengetahui port yang sedang terbuka serta layanan yang berjalan pada sistem 
+target. Sementara itu, Hydra berperan sebagai tools untuk simulasi upaya serangan 
+brute force terhadap layanan SSH (secure shell). Dalam konteks hardening, Fail2ban 
+berperan sebagai tools yang digunakan untuk mendeteksi dan melakukan 
+pemblokiran otomatis terhadap serangan, serta UFW berperan sebagai tools yang 
+digunakan memanajemen aturan firewall pada sistem Ubuntu yang menjadi target.  
+3.3 Pengumpulan dan Analisis Data 
+Pengumpulan data dalam eksperimen ini bersumber dari berbagai hasil 
+simulasi serangan dan respon sistem yang telah dilakukan. Data primer akan 
+diekstraksi dari log sistem yang dihasilkan oleh Ubuntu, serta log dari Fail2ban 
+dan UFW. Selain itu, hasil pemindaian port akan dihasilkan oleh Nmap dan 
+laporan upaya brute force akan dihasilkan oleh Hydra. Analisis data akan 
+dilakukan pada hasil yang diperoleh dari fase pra-hardening dengan fase 
+pasca-hardening. Adapun metrik evaluasi yang akan digunakan diantaranya 
+yaitu :  
+a)​ Evaluasi kemampuan sistem yang telah di hardening dalam mendeteksi 
+dan memblokir secara otomatis upaya port scanning dan serangan brute 
+force SSH. 
+b)​ Analisis jumlah port yang terbuka atau layanan yang terekspos pasca 
+dilakukannya konfigurasi UFW. 
+c)​ Analisis perbandingan tingkat keberhasilan serangan brute force SSH 
+antara kondisi pra dan pasca hardening. 
+d)​ Analisis terhadap log  sistem untuk mengidentifikasi pola serangan, dan 
+mekanisme respon yang diaktifkan oleh Fail2ban dan UFW. 
+Melalui metrik evaluasi ini, efektivitas hardening sistem operasi Ubuntu 
+dalam memitigasi serangan port scanning dan brute force SSH akan dapat dinilai.  
+4.​ Implementasi 
+Bab ini membahas secara rinci proses implementasi hardening pada sistem operasi 
+Ubuntu serta pengujian terhadap efektivitasnya dalam menghadapi serangan port 
+scanning dan brute force SSH. Tahapan implementasi dilakukan dalam lingkungan 
+virtual untuk memastikan kondisi yang terkendali dan dapat direproduksi. Hasil dari 
+setiap langkah pengujian didokumentasikan dan dianalisis guna menilai dampak 
+konfigurasi keamanan terhadap kemampuan sistem dalam menahan serangan. 
+4.1 Konfigurasi Awal Sistem 
+Pada fase awal implementasi ini, sistem operasi Ubuntu Server dan Kali 
+Linux dikonfigurasi sebagai mesin virtual dalam lingkungan VirtualBox. Konfigurasi 
+perangkat keras untuk kedua VM adalah identik, dirancang untuk memberikan 
+kinerja yang memadai selama pengujian: masing-masing dialokasikan Base Memory 
+sebesar 4096 MB dan processor sebanyak 2 CPU. 
+Dalam penelitian ini, kedua VM dikonfigurasi pada pengaturan default 
+pasca-instalasi. Secara spesifik, Ubuntu Server berada dalam kondisi awal tanpa 
+modifikasi atau konfigurasi keamanan tambahan. Ini mencakup pengaturan SSH 
+yang masih menggunakan parameter default Ubuntu, serta ketiadaan instalasi dan 
+konfigurasi Fail2Ban sebagai tools pencegahan brute force, kecuali untuk firewall 
+Uncomplicated Firewall (UFW) yang sudah diaktifkan untuk membuka beberapa 
+port. Pada kondisi default ini, hanya port esensial seperti SSH (port 22) yang secara 
+bawaan terbuka untuk memfasilitasi akses remote. Namun, untuk tujuan penelitian, 
+beberapa port lain juga sengaja dibuka, yaitu FTP (port 21), HTTP (port 80), dan 
+HTTPS (port 443). Pembukaan port-port ini menunjukkan bahwa layanan terkait 
+sudah berjalan dan dapat diakses dari luar, sehingga merepresentasikan permukaan 
+serangan (attack surface) yang luas sebelum proses hardening dimulai. 
+4.2 Simulasi Serangan Sebelum Hardening 
+Tahap ini diawali dengan simulasi serangan siber pada Ubuntu Server untuk 
+mengidentifikasi kerentanan dan mengukur respons sistem dalam kondisi default. 
+Pertama dilakukan port scanning kemudian dilanjutkan dengan serangan 
+menggunakan brute force. 
+4.2.1 Simulasi Pemindaian Port (Port Scanning) 
+Pemindaian Port (Port Scanning) dengan Nmap yang dilakukan untuk 
+mengidentifikasi port yang terbuka pada target Ubuntu Server. ​
+ 
+4.2.1 Simulasi Serangan Brute Force 
+Serangan Brute Force dengan Hydra yang ditargetkan pada layanan yang 
+teridentifikasi terbuka (misalnya FTP dan SSH) untuk menguji ketahanan 
+autentikasi.​
+​
+Terlihat pada gambar di atas,t Hydra menargetkan layanan SSH pada IP 10.0.2.18 
+dengan username admin, mencoba berbagai password dari wordlist rockyou.txt. 
+Pada akhirnya, serangan ini berhasil menemukan password yang valid, yaitu 
+password1. Ini menunjukkan bahwa brute force sukses mengkompromikan akun 
+tersebut.​
+​
+Kemudian dilakukan serangan brute force sekali lagi namun pada port yang berbeda 
+yaitu FTP. Terlihat bahwa Hydra berhasil melakukan serangkaian percobaan login 
+dengan username admin dan password dari wordlist rockyou.txt. Hasil akhirnya 
+adalah ditemukannya password yang valid, yaitu password1. Ini mengonfirmasi 
+keberhasilan serangan brute force pada layanan FTP tersebut. 
+4.3 Implementasi Teknik Hardening 
+Bagian ini menjelaskan langkah-langkah teknis konfigurasi keamanan yang 
+diterapkan pada sistem Ubuntu Server untuk meningkatkan ketahanannya terhadap 
+serangan siber. 
+4.3.1 Konfigurasi Firewall menggunakan UFW 
+Konfigurasi firewall dilakukan menggunakan Uncomplicated Firewall (UFW) 
+untuk mengontrol lalu lintas jaringan masuk dan keluar. Pada kondisi awal, UFW 
+berada dalam status nonaktif. Langkah-langkah yang diambil meliputi: 
+1.​ Mengecek status firewall UFW:​
+ 
+2.​ Tolak semua koneksi masuk secara default:​
+ 
+3.​ Izinkan semua koneksi keluar secara default:​
+ 
+4.​ Hapus aturan ALLOW IN untuk port 21/tcp:​
+​
+Lakukan hal yang sama pada semua port kecuali port yang ingin dibuka yaitu 
+port 22 (SSH). Sehingga hasil akhir konfigurasi UFW sebagai berikut:​
+ 
+4.3.2 Konfigurasi Layanan SSH 
+Pengaturan default layanan SSH pada Ubuntu Server dimodifikasi untuk 
+mengurangi risiko serangan brute force dan akses tidak sah. Perubahan yang 
+dilakukan pada file konfigurasi /etc/ssh/sshd_config meliputi: 
+1.​ LoginGraceTime diubah dari default 2 menit menjadi 1 menit. Ini membatasi 
+waktu yang diberikan kepada pengguna untuk menyelesaikan proses login 
+setelah koneksi berhasil dibuat. 
+2.​ PermitRootLogin diatur menjadi no. Ini mencegah login langsung menggunakan 
+akun root, sehingga memaksa penyerang untuk menargetkan akun pengguna 
+biasa dan mengurangi risiko kompromi akun root. 
+3.​ MaxAuthTries diatur menjadi 3. Pembatasan ini mengizinkan maksimal 3 
+percobaan autentikasi yang gagal per koneksi SSH sebelum koneksi diputus. 
+4.​ MaxSessions diatur menjadi 5. Ini membatasi jumlah sesi simultan yang dapat 
+dibuka oleh satu pengguna, membantu mencegah kelebihan beban sumber daya 
+akibat serangan. 
+Berikut hasil dokumentasinya:​
+ 
+4.3.3 Instalasi dan Konfigurasi Fail2Ban 
+Fail2Ban diinstal dan dikonfigurasi untuk secara otomatis memblokir alamat 
+IP yang menunjukkan perilaku mencurigakan seperti upaya login yang gagal 
+berulang kali. 
+1.​ Instalasi Fail2Ban:​
+ 
+2.​ Aktifkan Fail2Ban:​
+ 
+3.​ Cek status Fail2Ban:​
+ 
+4.4 Simulasi Serangan Setelah Hardening 
+Setelah implementasi teknik hardening, serangkaian simulasi serangan 
+dilakukan untuk mengevaluasi efektivitas konfigurasi keamanan yang telah 
+diterapkan. Setiap uji coba didokumentasikan dengan cermat, dengan bukti 
+screenshot untuk mendukung analisis hasil. 
+4.4.1 Simulasi Port Scanning 
+Pemindaian port adalah langkah pertama dalam mengidentifikasi perubahan 
+pada attack surface sistem setelah hardening. Dengan menggunakan tools Nmap, 
+simulasi pemindaian dilakukan untuk menganalisis port mana yang tetap terbuka 
+dan mana yang berhasil diblokir oleh firewall.​
+​
+Gambar di atas menampilkan hasil pemindaian port Nmap (nmap -sS 10.0.2.18) 
+pada Ubuntu Server setelah proses hardening. Terlihat bahwa hanya Port 22/tcp 
+(SSH) yang berstatus open, mengindikasikan bahwa layanan SSH dapat diakses. 
+Selain itu, 999 filtered TCP ports (no-response), menunjukkan bahwa sebagian besar 
+port lainnya kini tidak memberikan respons terhadap pemindaian, mengindikasikan 
+pemblokiran lalu lintas masuk. 
+4.4.2 Simulasi Brute Force SSH 
+Simulasi serangan brute force ditargetkan pada layanan SSH menggunakan 
+tools Hydra untuk mengevaluasi dampak konfigurasi hardening terhadap upaya 
+otentikasi yang tidak sah. ​
+​
+Hasil simulasi brute force SSH menggunakan Hydra (hydra -V -t 3 -l admin -P 
+/usr/share/wordlists/rockyou.txt ssh://10.0.2.18) pada tahap awal setelah penerapan 
+hardening disajikan pada Gambar diatas. Observasi menunjukkan bahwa Hydra 
+masih dapat melakukan sejumlah upaya login per koneksi ([ATTEMPT], 
+[RE-ATTEMPT]). Namun, proses serangan melambat secara signifikan dan akhirnya 
+terhenti dengan pesan error "all children were disabled due to many connection 
+errors" serta "1 target was disabled because of too many errors". Fenomena ini 
+mengindikasikan adanya pembatasan percobaan login dan pemutusan koneksi pada 
+sistem target. Selanjutnya, dilakukan serangan brute force sekali lagi untuk melihat 
+response dari target.​
+ 
+Gambar di atas menampilkan output dari tools Hydra saat melakukan simulasi 
+serangan brute force SSH terhadap target 10.0.2.18. Terlihat bahwa Hydra 
+menginisiasi upaya login dengan 3 tasks paralel. Namun, proses ini segera 
+dihentikan dengan pesan error "could not connect to ssh://10.0.2.18:22 - Connection 
+refused". Pesan ini mengindikasikan bahwa koneksi ke port SSH (22) pada target 
+ditolak, mencegah Hydra untuk melanjutkan upaya login. 
+4.5 Analisis Log Sistem 
+Analisis log sistem dilakukan sebagai langkah krusial dalam memvalidasi 
+efektivitas teknik hardening yang diterapkan. Data untuk analisis ini bersumber dari 
+log otentikasi (auth.log), log Fail2Ban (fail2ban.log), dan log firewall UFW (ufw.log), 
+yang secara kolektif memberikan gambaran komprehensif mengenai respons sistem 
+terhadap simulasi serangan. 
+4.5.1 Log Otentikasi (auth.log) 
+Log ini mencatat semua upaya login (berhasil dan gagal) melalui SSH, sudo, 
+su, dan layanan autentikasi lainnya.​
+​
+Terlihat banyak upaya login yang gagal untuk pengguna admin yang berasal dari 
+alamat IP 10.0.2.17. Setelah sejumlah percobaan, sistem mencatat bahwa "maximum 
+authentication attempts exceeded" diikuti dengan pemutusan koneksi karena "Too 
+many authentication failures". 
+4.5.2 Log Fail2ban (fail2ban.log) 
+Log ini mencatat aktivitas Fail2ban, termasuk kapan ia mendeteksi upaya 
+login yang gagal, kapan ia memblokir (ban) suatu IP, dan kapan ia melepaskan 
+blokir (unban).​
+​
+Cuplikan dari fail2ban.log ini menunjukkan beberapa deteksi upaya mencurigakan 
+dari IP 10.0.2.17 oleh jail sshd ([sshd] Found 10.0.2.17). Kemudian, pada 13:55:03, 
+Fail2ban mencatat tindakan pemblokiran terhadap IP tersebut ([sshd] Ban 10.0.2.17). 
+Setelah pemblokiran, log masih menunjukkan upaya dari IP yang sama, namun 
+disertai notifikasi bahwa IP tersebut "already banned". Ini mengonfirmasi bahwa 
+Fail2ban berhasil mendeteksi dan memblokir IP penyerang. 
+4.5.3 Log UFW (ufw.log) 
+Log ini mencatat lalu lintas jaringan yang diizinkan atau ditolak oleh UFW, 
+terutama lalu lintas yang cocok dengan aturan firewall atau default policies.​
+​
+Cuplikan dari ufw.log menunjukkan bahwa firewall secara aktif memblokir lalu 
+lintas. Terlihat beberapa entri [UFW BLOCK] untuk lalu lintas TCP yang berasal dari 
+IP 10.0.2.17 (sumber) menuju IP 10.0.2.18 (target) pada Port 80 (HTTP). Ini 
+mengindikasikan bahwa firewall berhasil menolak koneksi masuk ke port tersebut. 
+5.​ Hasil dan Pembahasan 
+Hasil eksperimen menunjukkan bahwa sistem operasi Ubuntu dalam kondisi 
+default atau sebelum dilakukan hardening sangat rentan terhadap serangan siber. 
+Dalam simulasi serangan port scanning menggunakan tool nmap dari mesin penyerang 
+(Kali Linux), ditemukan sejumlah port yang terbuka pada sistem Ubuntu, termasuk port 
+22 (SSH) dan port 21 (FTP). Keterbukaan ini mengindikasikan bahwa layanan-layanan 
+tersebut aktif dan dapat dikenali dengan mudah oleh pihak luar, sehingga 
+meningkatkan risiko terhadap eksploitasi layanan tersebut. 
+ 
+Selanjutnya, pada fase pra-hardening, simulasi brute force SSH menggunakan 
+Hydra berhasil menembus sistem dengan menemukan kombinasi username dan 
+password yang valid. Serangan ini menunjukkan bahwa tidak adanya pembatasan 
+jumlah percobaan login serta tidak diterapkannya deteksi otomatis terhadap aktivitas 
+mencurigakan membuat sistem rentan terhadap brute force. Setelah sistem Ubuntu 
+dilakukan hardening, terdapat perubahan signifikan dalam respons sistem terhadap 
+kedua jenis serangan tersebut. Ketika port scanning kembali dilakukan pasca-hardening, 
+hasil nmap menunjukkan bahwa sebagian besar port yang sebelumnya terbuka tidak 
+lagi terdeteksi sebagai aktif. Hal ini memperlihatkan bahwa sistem telah membatasi 
+akses eksternal terhadap layanan-layanan tertentu melalui konfigurasi firewall, sehingga 
+menyulitkan penyerang dalam melakukan enumerasi layanan. 
+ 
+Pada percobaan ulang brute force SSH setelah sistem di-hardening, tool Hydra 
+mengalami kegagalan dalam melakukan login karena sistem secara otomatis memblokir 
+alamat IP penyerang setelah terdeteksi sejumlah upaya login yang gagal. Mekanisme ini 
+berhasil diimplementasikan melalui sistem pemantauan dan pemblokiran berbasis 
+Fail2ban, yang menambahkan lapisan perlindungan reaktif terhadap sistem. Hal ini 
+menunjukkan bahwa sistem tidak hanya lebih aman secara konfiguratif, tetapi juga 
+adaptif terhadap pola serangan berulang. 
+ 
+Perbandingan kondisi sebelum dan sesudah hardening menunjukkan efektivitas 
+signifikan dalam meningkatkan keamanan sistem. Sebelum hardening, sistem bersifat 
+terbuka, mudah dipindai, dan rentan terhadap brute force. Setelah hardening, sistem 
+menjadi lebih tertutup, terlindungi, dan responsif terhadap ancaman. Hasil ini konsisten 
+dengan penelitian terdahulu seperti Fakhry (2021) dan Zahra et al. (IPB University), 
+yang menunjukkan bahwa penggunaan firewall serta Fail2ban dapat secara drastis 
+mengurangi tingkat keberhasilan serangan brute force terhadap SSH dan menekankan 
+pentingnya teknik hardening untuk memperkuat sistem operasi Ubuntu terhadap 
+serangan eksternal. 
+6.​ Kesimpulan 
+Secara keseluruhan, penerapan hardening pada sistem operasi Ubuntu terbukti 
+efektif dalam memperkuat ketahanan sistem terhadap dua ancaman utama yang diuji, 
+yaitu port scanning dan brute force SSH, serta memberikan perlindungan nyata melalui 
+pengendalian akses dan respon otomatis terhadap serangan. Sehingga penerapan 
+strategi hardening yang tepat dan proporsional mampu meminimalkan risiko serangan 
+siber serta menjaga kestabilan dan integritas sistem operasi secara menyeluruh. 
+7.​ Daftar Pustaka 
+[1] Rahman, H., Amnur, & Rahmayuni, I. (2020). Monitoring Server dengan Prometheus 
+dan Grafana serta Notifikasi Telegram. JITSI Jurnal Ilmiah Teknologi Sistem Informasi, 
+1(4), 133-138. https://doi.org/10.30630/jitsi.1.4.19 
+[2] Fakhry, R. R. (2021). Penerapan Keamanan Server dengan Teknik Hardening pada Sistem 
+Operasi 
+Ubuntu 
+Server. 
+Universitas 
+Muhammadiyah 
+Surakarta. 
+http://eprints.ums.ac.id/id/eprint/90707 
+[3] Az Zahra, D. R., Ilham, F. P., Ramdhani, H. N., & Setiawan, A. (t.t.). Penerapan dan 
+Pengujian Keamanan SSH Pada Server Linux menggunakan Hydra. Sekolah Vokasi, IPB 
+University. https://doi.org/10.47134/pjise.v1i3.2627 
+[4] Anggreni, N. K. A. S., & Jasa, L. (2022). Literatur Review Analisis metode 
+De-Militarized Zone (DMZ) dan Switch Port security Sebagai Metode Keamanan 
+Jaringan. 
+Majalah 
+Ilmiah 
+Teknologi 
+Elektro, 
+21(2), 
+195. 
+https://doi.org/10.24843/MITE.2022.v21i02.P06 
+[5] Raharjo, M., Firmansyah, S., Watmah, S., Sandi, T. A., & Putra, J. L. (2024). 
+Penetration Testing Pada Sistem Keamanan Jaringan Dengan Metode Filtering 
+Addresslist dan IPSecvice. Jurnal Inovasi dan Sains Teknik Elektro, 5(2), 71-78. 
+http://jurnal.bsi.ac.id/index.php/insantek 
+[6] Malik, G., Wahyudi, K., Sakti, F. T. A., Ghofar, A., & Anchor, A. H. (2024). Analisa 
+Perbandingan Manajemen Proses Multitasking pada Sistem Operasi Windows dan 
+Linux. Jurnal Teknik Mesin, Industri, Elektro dan Informatika, 3(4), 190-199. 
+https://doi.org/10.55606/jtmei.v3i4.4538 
+[7] Stallings, W., & Brown, L. (2018). Computer Security: Principles and Practice (4th ed.). 
+Pearson. 
+[8] Saltzer, J. H., & Schroeder, M. D. (1975). The Protection of Information in Computer 
+Systems. Proceedings of the IEEE, 63(9), 1278–1308. 
+[9] Canonical. (2025). Security for Ubuntu. Ubuntu. Diakses pada 7 Juli 2025, dari 
+https://ubuntu.com/security 
+ 
+ 

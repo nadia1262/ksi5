@@ -199,6 +199,32 @@ function createZeroTrustMiddleware(redisClient, io) {
 
             req.jwtPayload = decoded;
 
+            // CEK 1.5: Apakah JWT di-blacklist di Redis?
+            if (redisClient) {
+                const jti = decoded.jti || token.substring(0, 20);
+                try {
+                    const isBlacklisted = await redisClient.get(`blacklist:${jti}`);
+                    if (isBlacklisted) {
+                        const logEntry = {
+                            timestamp: new Date().toISOString(),
+                            ip: req.headers['x-simulated-ip'] || req.ip || '127.0.0.1',
+                            source_tenant: decoded.tenant_id || 'Unknown',
+                            target_tenant: 'N/A',
+                            target_endpoint: req.originalUrl,
+                            action: 'BLOCKED',
+                            risk_score: 100,
+                            reason: 'JWT Blacklisted (Previous Security Violation)',
+                            context: { is_new_ip: false, is_off_hours: false, is_high_velocity: false },
+                            latency_ms: Date.now() - startTime,
+                        };
+                        if (io) io.emit('security-log', logEntry);
+                        return res.status(403).json({ error: 'Forbidden', risk_score: 100, message: 'Token JWT telah di-blacklist karena pelanggaran keamanan sebelumnya.' });
+                    }
+                } catch (err) {
+                    console.warn('[ZT-MIDDLEWARE] Failed to check blacklist:', err.message);
+                }
+            }
+
             // CEK 2: Ambil tenant_id dari URL path
             // Format: /api/wilayah/:tenantId/penduduk/:id
             // Karena dipasang sebelum router, req.params kosong. Ekstrak dari originalUrl:

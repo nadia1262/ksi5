@@ -73,7 +73,7 @@ export default function PortalData({ token, tenantId, onBolaResult }) {
                 if (data.success) setKabkotaList(data.data);
             })
             .catch(() => {});
-    }, [selectedProv]);
+    }, [selectedProv, token]);
 
     // ---- Load data penduduk ----
     const loadPenduduk = useCallback((kabId) => {

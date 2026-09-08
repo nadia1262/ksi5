@@ -82,8 +82,18 @@ export default function SimulatorKeamanan({ token, tenantId, users, onSelectUser
     // Handle user switch
     const handleUserChange = (username) => {
         setSelectedUser(username);
-        setResponse(null);
-        if (onSelectUser) onSelectUser(username);
+        if (onSelectUser) {
+            onSelectUser(username);
+            setResponse({
+                status: 200,
+                statusText: 'USER SWITCHED',
+                latency: 0,
+                data: { message: `Berhasil berganti ke operator: ${username}. Token JWT diperbarui secara sinkron dengan Keycloak.` },
+                timestamp: new Date().toLocaleTimeString('id-ID'),
+            });
+        } else {
+            setResponse(null);
+        }
     };
 
     // Truncate JWT untuk tampilan

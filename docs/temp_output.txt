@@ -1,0 +1,177 @@
+ 
+ 
+PROPOSAL PROYEK AKHIR 
+MATA KULIAH KEAMANAN SISTEM INFORMASI 
+ 
+ 
+[JUDUL PROYEK] 
+ 
+ 
+ 
+Disusun oleh: 
+ 
+[Nama Lengkap Anggota 1] 
+[NIM Anggota 1] 
+[Nama Lengkap Anggota 2] 
+[NIM Anggota 2] 
+[Nama Lengkap Anggota 3] 
+[NIM Anggota 3]​
+ 
+[Nama Lengkap Anggota 4] 
+[NIM Anggota 4] 
+[Nama Lengkap Anggota 5] 
+[NIM Anggota 5] 
+ 
+ 
+Dosen Pengampu: 
+Farid Ridho, S.S.T., M.T. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+PROGRAM STUDI DIV KOMPUTASI STATISTIK 
+POLITEKNIK STATISTIKA STIS 
+2026 
+Proposal Proyek Akhir – Keamanan Sistem Informasi 
+BAB I  PENDAHULUAN 
+1.1  Latar Belakang 
+[Jelaskan konteks permasalahan keamanan informasi yang melatarbelakangi proyek ini. 
+Uraikan kondisi terkini, tantangan, serta urgensi dari topik yang diangkat.] 
+1.2  Rumusan Masalah 
+[Tuliskan pertanyaan-pertanyaan penelitian/proyek yang akan dijawab, misalnya:] 
+1. [Rumusan masalah pertama] 
+2. [Rumusan masalah kedua] 
+3. [Rumusan masalah ketiga] 
+1.3  Tujuan Proyek 
+[Sebutkan tujuan yang ingin dicapai secara spesifik dan terukur.] 
+1. [Tujuan pertama] 
+2. [Tujuan kedua] 
+3. [Tujuan ketiga] 
+1.4  Manfaat Proyek 
+[Uraikan manfaat proyek baik secara akademis maupun praktis.] 
+1.5  Ruang Lingkup dan Batasan 
+[Tentukan batasan-batasan proyek agar fokus dan realistis, misalnya: jenis serangan yang 
+diuji, platform target, tools yang digunakan, dsb.] 
+ 
+2 
+Proposal Proyek Akhir – Keamanan Sistem Informasi 
+BAB II  TINJAUAN PUSTAKA 
+2.1  Landasan Teori 
+[Uraikan teori-teori dan konsep utama yang mendasari proyek, misalnya:] 
+a. Konsep dasar keamanan informasi (Confidentiality, Integrity, Availability) 
+b. Standar dan framework keamanan (ISO 27001, NIST, OWASP, dsb.) 
+c. Metode/teknik keamanan yang relevan (kriptografi, penetration testing, IDS/IPS, 
+dll.) 
+2.2  Penelitian/Proyek Terkait 
+[Cantumkan minimal 3–5 referensi penelitian atau proyek sejenis beserta perbandingan 
+dengan proyek yang diusulkan. Gunakan format tabel atau narasi.] 
+2.3  Teknologi dan Tools yang Digunakan 
+[Jelaskan teknologi, bahasa pemrograman, framework, dan tools keamanan yang akan 
+digunakan beserta alasan pemilihannya (contoh: Kali Linux, Wireshark, Burp Suite, 
+Metasploit, Nmap, OpenSSL, dsb.)] 
+ 
+3 
+Proposal Proyek Akhir – Keamanan Sistem Informasi 
+BAB III  METODOLOGI 
+3.1  Tahapan Pelaksanaan 
+[Jelaskan alur metodologi proyek secara sistematis, misalnya:] 
+1. Studi literatur dan analisis kebutuhan 
+2. Perancangan sistem/arsitektur keamanan 
+3. Implementasi dan pengembangan 
+4. Pengujian dan evaluasi 
+5. Dokumentasi dan penyusunan laporan 
+3.2  Arsitektur/Desain Sistem 
+[Sertakan diagram arsitektur sistem, diagram alir (flowchart), atau desain topologi jaringan 
+yang relevan dengan proyek.] 
+3.3  Skenario Pengujian 
+[Jelaskan skenario pengujian keamanan yang akan dilakukan, parameter keberhasilan, serta 
+metrik evaluasi yang digunakan. Contoh skenario:] 
+a. Pengujian vulnerability scanning 
+b. Simulasi serangan (penetration testing) 
+c. Pengujian kontrol akses dan autentikasi 
+d. Pengujian enkripsi data 
+ 
+4 
+Proposal Proyek Akhir – Keamanan Sistem Informasi 
+BAB IV  JADWAL PELAKSANAAN 
+Berikut adalah rencana jadwal pelaksanaan proyek: 
+ 
+No 
+Kegiatan 
+Minggu 1-3 Minggu 4-6 Minggu 7-9 
+Minggu 
+10-12 
+1 
+Studi literatur & analisis 
+kebutuhan 
+ 
+ 
+ 
+ 
+2 
+Perancangan sistem/arsitektur 
+keamanan 
+ 
+ 
+ 
+ 
+3 
+Implementasi & pengembangan 
+ 
+ 
+ 
+ 
+4 
+Pengujian & evaluasi 
+ 
+ 
+ 
+ 
+5 
+Penyusunan laporan & presentasi 
+ 
+ 
+ 
+ 
+ 
+[Sesuaikan periode waktu dengan kalender akademik yang berlaku.] 
+ 
+5 
+Proposal Proyek Akhir – Keamanan Sistem Informasi 
+BAB V  PEMBAGIAN TUGAS 
+[Jelaskan pembagian peran dan tanggung jawab masing-masing anggota tim.] 
+ 
+No 
+Nama Anggota 
+Peran 
+Tugas Utama 
+1 
+[Nama] 
+[Peran] 
+[Uraian tugas] 
+2 
+[Nama] 
+[Peran] 
+[Uraian tugas] 
+3 
+[Nama] 
+[Peran] 
+[Uraian tugas] 
+ 
+6 
+Proposal Proyek Akhir – Keamanan Sistem Informasi 
+DAFTAR PUSTAKA 
+ 
+[Cantumkan seluruh referensi yang digunakan dengan format sitasi yang konsisten (APA, 
+IEEE, atau sesuai ketentuan dosen). Contoh:] 
+ 
+[1]  A. Penulis, “Judul Artikel,” Nama Jurnal, vol. X, no. Y, pp. 1–10, Tahun. 
+[2]  B. Penulis, Judul Buku, Edisi. Kota: Penerbit, Tahun. 
+[3]  
+C. Penulis, “Judul Halaman Web,” Nama Situs, Tahun. [Online]. Tersedia: 
+https://example.com 
+7 

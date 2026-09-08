@@ -5,7 +5,7 @@
 // Entry point yang mengatur: login, tab navigation,
 // state management (JWT, WebSocket, ZT), dan komponen anak.
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { io } from 'socket.io-client';
 import PortalData from './components/PortalData';
 import SimulatorKeamanan from './components/SimulatorKeamanan';
@@ -65,7 +65,6 @@ export default function App() {
 
         // Security event dari middleware
         socket.on('security-log', (event) => {
-            console.log('[WS] security-log received:', event);
             const contextFlags = [];
             if (event.context?.is_new_ip) contextFlags.push('IP BARU');
             if (event.context?.is_off_hours) contextFlags.push('WAKTU');
@@ -91,11 +90,12 @@ export default function App() {
     }, []);
 
     // ---- Fetch server stats periodically ----
+    // /api/stats tidak butuh auth karena di-mount langsung di server.js (bukan lewat router)
     useEffect(() => {
         const fetchStats = () => {
             fetch(`${BACKEND_URL}/api/stats`)
-                .then(r => r.json())
-                .then(data => setServerStats(data))
+                .then(r => r.ok ? r.json() : null)
+                .then(data => { if (data) setServerStats(data); })
                 .catch(() => {});
         };
         fetchStats();
@@ -131,7 +131,7 @@ export default function App() {
             );
 
             if (!res.ok) {
-                throw new Error(`Login gagal (HTTP ${res.status}). Pastikan Keycloak berjalan.`);
+                throw new Error(`Login gagal (HTTP ${res.status}). Pastikan Keycloak berjalan di ${KEYCLOAK_URL}.`);
             }
 
             const data = await res.json();
@@ -168,7 +168,7 @@ export default function App() {
         try {
             await fetch(`${BACKEND_URL}/api/toggle-zt`, { method: 'POST' });
         } catch (err) {
-            // ignore
+            // ignore — status akan datang via WebSocket
         }
     };
 
@@ -263,7 +263,7 @@ export default function App() {
             {/* ---- TABS ---- */}
             <nav className="app-tabs">
                 {TABS.map((tab, i) => (
-                    <div key={tab.id}>
+                    <React.Fragment key={tab.id}>
                         {i > 0 && <div className="app-tabs__separator" />}
                         <div
                             className={`app-tabs__item ${activeTab === tab.id ? 'app-tabs__item--active' : ''}`}
@@ -271,7 +271,7 @@ export default function App() {
                         >
                             {tab.label}
                         </div>
-                    </div>
+                    </React.Fragment>
                 ))}
             </nav>
 
