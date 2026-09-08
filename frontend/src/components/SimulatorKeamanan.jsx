@@ -10,8 +10,9 @@ const API = 'http://localhost:3001/api';
 
 const IP_OPTIONS = [
     { value: '', label: '-- Default (IP asli) --' },
+    { value: 'random', label: 'Random IP (Selalu Baru)' },
     { value: '192.168.1.10', label: '192.168.1.10 — IP Kantor (Terdaftar)' },
-    { value: '110.50.23.99', label: '110.50.23.99 — IP Baru (Tidak Dikenal)' },
+    { value: '110.50.23.99', label: '110.50.23.99 — IP Asing (Statis)' },
     { value: '203.176.80.11', label: '203.176.80.11 — IP Publik Lain' },
     { value: '10.0.0.1', label: '10.0.0.1 — IP VPN Internal' },
 ];
@@ -48,7 +49,11 @@ export default function SimulatorKeamanan({ token, tenantId, users, onSelectUser
         const startTime = performance.now();
         try {
             const headers = { Authorization: `Bearer ${token}` };
-            if (simIp) headers['X-Simulated-IP'] = simIp;
+            let finalIp = simIp;
+            if (simIp === 'random') {
+                finalIp = `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+            }
+            if (finalIp) headers['X-Simulated-IP'] = finalIp;
             if (simTime) headers['X-Simulated-Time'] = simTime;
 
             const url = `http://localhost:3001${targetEndpoint}`;
@@ -62,7 +67,7 @@ export default function SimulatorKeamanan({ token, tenantId, users, onSelectUser
                 latency,
                 data,
                 headers: {
-                    ip: simIp || '(IP asli)',
+                    ip: finalIp || '(IP asli)',
                     time: simTime || new Date().toLocaleTimeString('id-ID'),
                 },
                 timestamp: new Date().toLocaleTimeString('id-ID'),
@@ -73,6 +78,56 @@ export default function SimulatorKeamanan({ token, tenantId, users, onSelectUser
                 statusText: 'CONNECTION ERROR',
                 latency: 0,
                 data: { error: 'Koneksi Gagal', message: err.message },
+                timestamp: new Date().toLocaleTimeString('id-ID'),
+            });
+        }
+        setLoading(false);
+    };
+
+    // Kirim serangan beruntun (Intruder)
+    const handleIntruderAttack = async () => {
+        if (!token) return;
+        setLoading(true);
+        setResponse(null);
+
+        const startTime = performance.now();
+        let lastRes, lastData, finalIp;
+
+        try {
+            // Jalankan 15 request berturut-turut untuk trigger high-velocity (limit: >10 per 60s)
+            for (let i = 0; i < 15; i++) {
+                const headers = { Authorization: `Bearer ${token}` };
+                finalIp = simIp;
+                if (simIp === 'random') {
+                    finalIp = `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+                }
+                if (finalIp) headers['X-Simulated-IP'] = finalIp;
+                if (simTime) headers['X-Simulated-Time'] = simTime;
+
+                const url = `http://localhost:3001${targetEndpoint}?burst=${i}`;
+                lastRes = await fetch(url, { headers });
+                lastData = await lastRes.json();
+            }
+
+            const latency = Math.round(performance.now() - startTime);
+
+            setResponse({
+                status: lastRes.status,
+                statusText: lastRes.statusText,
+                latency,
+                data: lastData,
+                headers: {
+                    ip: finalIp || '(IP asli)',
+                    time: simTime || new Date().toLocaleTimeString('id-ID'),
+                },
+                timestamp: new Date().toLocaleTimeString('id-ID'),
+            });
+        } catch (err) {
+            setResponse({
+                status: 0,
+                statusText: 'CONNECTION ERROR',
+                latency: 0,
+                data: { error: 'Koneksi Gagal saat Intruder Attack', message: err.message },
                 timestamp: new Date().toLocaleTimeString('id-ID'),
             });
         }
@@ -182,13 +237,25 @@ export default function SimulatorKeamanan({ token, tenantId, users, onSelectUser
                         </div>
                     </div>
 
-                    <button
-                        className="btn btn--primary btn--block"
-                        onClick={handleSend}
-                        disabled={!token || loading}
-                    >
-                        {loading ? 'Mengirim...' : 'Kirim Permintaan'}
-                    </button>
+                    <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
+                        <button
+                            className="btn btn--primary"
+                            style={{ flex: 1 }}
+                            onClick={handleSend}
+                            disabled={!token || loading}
+                        >
+                            {loading ? 'Mengirim...' : 'Kirim Normal'}
+                        </button>
+                        <button
+                            className="btn btn--danger"
+                            style={{ flex: 1, backgroundColor: '#8B0000', borderColor: '#8B0000' }}
+                            onClick={handleIntruderAttack}
+                            disabled={!token || loading}
+                            title="Mengirim 15 request dalam hitungan detik untuk mentrigger 'Velocity Exceeded'"
+                        >
+                            {loading ? 'Menyerang...' : 'Serangan Intruder (15x)'}
+                        </button>
+                    </div>
                 </div>
 
                 {/* ---- RIGHT: Response ---- */}
