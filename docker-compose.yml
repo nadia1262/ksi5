@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.0
+    container_name: zt_keycloak
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+    command: start-dev
+    ports:
+      - "8080:8080"
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+
+  opa:
+    image: openpolicyagent/opa:latest-rootless
+    container_name: zt_opa
+    ports:
+      - "8181:8181"
+    command: ["run", "--server", "--log-level=debug", "/policy"]
+    volumes:
+      - ./policy:/policy
+
+  redis:
+    image: redis:alpine
+    container_name: zt_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  keycloak_data:
+  redis_data:

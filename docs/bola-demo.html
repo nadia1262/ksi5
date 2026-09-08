@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔓 Demo Interaktif: BOLA Vulnerability (BPS Context)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #111827;
+            --bg-card: #1a2035;
+            --bg-card-hover: #1f2847;
+            --border: #2a3352;
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-amber: #f59e0b;
+            --accent-purple: #8b5cf6;
+            --success-bg: rgba(16, 185, 129, 0.1);
+            --danger-bg: rgba(239, 68, 68, 0.1);
+            --warning-bg: rgba(245, 158, 11, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* === HEADER === */
+        .hero {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #172554 100%);
+            padding: 40px 32px 32px;
+            border-bottom: 1px solid var(--border);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 30% 50%, rgba(59,130,246,0.08) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 50%, rgba(139,92,246,0.06) 0%, transparent 50%);
+            animation: shimmer 15s ease-in-out infinite;
+        }
+        @keyframes shimmer {
+            0%, 100% { transform: translateX(-5%) translateY(-5%); }
+            50% { transform: translateX(5%) translateY(5%); }
+        }
+        .hero > * { position: relative; z-index: 1; }
+        .hero h1 {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        .hero p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .hero .badge-row {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+        .badge.owasp { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
+        .badge.api { background: rgba(59,130,246,0.15); color: #93c5fd; border: 1px solid rgba(59,130,246,0.3); }
+        .badge.zt { background: rgba(16,185,129,0.15); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); }
+
+        /* === MAIN CONTAINER === */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* === SECTION === */
+        .section {
+            margin-bottom: 32px;
+        }
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .section-number {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        .section-number.blue { background: rgba(59,130,246,0.2); color: #60a5fa; }
+        .section-number.red { background: rgba(239,68,68,0.2); color: #f87171; }
+        .section-number.green { background: rgba(16,185,129,0.2); color: #34d399; }
+        .section-number.purple { background: rgba(139,92,246,0.2); color: #a78bfa; }
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .section-subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* === CARD === */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.2s ease;
+        }
+        .card:hover { border-color: rgba(59,130,246,0.3); }
+
+        /* === EXPLANATION BOX === */
+        .explain-box {
+            background: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(139,92,246,0.05));
+            border: 1px solid rgba(59,130,246,0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .explain-box h3 {
+            font-size: 15px;
+            font-weight: 700;
+            color: #93c5fd;
+            margin-bottom: 10px;
+        }
+        .explain-box p, .explain-box li {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .explain-box ul { padding-left: 20px; }
+        .explain-box li { margin-bottom: 4px; }
+        .explain-box code {
+            background: rgba(0,0,0,0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: #fbbf24;
+        }
+
+        /* === DATABASE TABLE === */
+        .db-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .db-table th {
+            background: rgba(59,130,246,0.1);
+            color: #93c5fd;
+            text-align: left;
+            padding: 10px 14px;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
+        }
+        .db-table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid rgba(42,51,82,0.5);
+            color: var(--text-secondary);
+        }
+        .db-table tr:hover td { background: rgba(59,130,246,0.03); }
+        .db-table .tenant-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .tenant-3174 { background: rgba(59,130,246,0.15); color: #93c5fd; }
+        .tenant-3171 { background: rgba(245,158,11,0.15); color: #fbbf24; }
+        .tenant-3201 { background: rgba(16,185,129,0.15); color: #6ee7b7; }
+
+        /* === INTERACTIVE DEMO === */
+        .demo-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        @media (max-width: 768px) { .demo-area { grid-template-columns: 1fr; } }
+
+        .demo-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .demo-panel-header {
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+        }
+        .demo-panel-header h4 {
+            font-size: 13px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .demo-panel-body { padding: 16px; }
+
+        .field-group { margin-bottom: 14px; }
+        .field-group label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+        .field-group select,
+        .field-group input {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .field-group select:focus,
+        .field-group input:focus {
+            border-color: var(--accent-blue);
+        }
+
+        .url-display {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-secondary);
+            word-break: break-all;
+        }
+        .url-display .method { color: #34d399; font-weight: 700; }
+        .url-display .highlight { color: #fbbf24; font-weight: 600; }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn-attack {
+            background: linear-gradient(135deg, #dc2626, #991b1b);
+            color: white;
+        }
+        .btn-attack:hover { background: linear-gradient(135deg, #ef4444, #b91c1c); box-shadow: 0 4px 20px rgba(239,68,68,0.3); }
+        .btn-safe {
+            background: linear-gradient(135deg, #059669, #047857);
+            color: white;
+        }
+        .btn-safe:hover { background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 20px rgba(16,185,129,0.3); }
+        .btn-primary {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+        }
+        .btn-primary:hover { background: linear-gradient(135deg, #3b82f6, #2563eb); box-shadow: 0 4px 20px rgba(59,130,246,0.3); }
+
+        /* Response */
+        .response-area {
+            margin-top: 14px;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            transition: border-color 0.3s;
+        }
+        .response-area.vuln { border-color: rgba(239,68,68,0.5); }
+        .response-area.safe { border-color: rgba(16,185,129,0.5); }
+        .response-header {
+            padding: 8px 14px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .response-header.status-200 { background: rgba(239,68,68,0.1); color: #fca5a5; }
+        .response-header.status-403 { background: rgba(16,185,129,0.1); color: #6ee7b7; }
+        .response-header.status-ok { background: rgba(16,185,129,0.1); color: #6ee7b7; }
+        .response-body {
+            padding: 14px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11.5px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            white-space: pre-wrap;
+            max-height: 280px;
+            overflow-y: auto;
+        }
+
+        /* Mode Toggle */
+        .mode-toggle {
+            display: flex;
+            gap: 0;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+        .mode-btn {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            background: var(--bg-card);
+            color: var(--text-muted);
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .mode-btn.active.vuln {
+            background: rgba(239,68,68,0.15);
+            color: #fca5a5;
+            box-shadow: inset 0 -2px 0 #ef4444;
+        }
+        .mode-btn.active.safe {
+            background: rgba(16,185,129,0.15);
+            color: #6ee7b7;
+            box-shadow: inset 0 -2px 0 #10b981;
+        }
+        .mode-btn:hover:not(.active) { background: var(--bg-card-hover); color: var(--text-secondary); }
+
+        /* Comparison Table */
+        .compare-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .compare-table th {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
+        }
+        .compare-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(42,51,82,0.5);
+            color: var(--text-secondary);
+        }
+        .compare-table .col-vuln { background: rgba(239,68,68,0.03); }
+        .compare-table .col-safe { background: rgba(16,185,129,0.03); }
+        .compare-table th.col-vuln { color: #fca5a5; background: rgba(239,68,68,0.08); }
+        .compare-table th.col-safe { color: #6ee7b7; background: rgba(16,185,129,0.08); }
+
+        /* FLOW DIAGRAM */
+        .flow-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+        .flow-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 14px 0;
+            position: relative;
+        }
+        .flow-step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: 17px;
+            top: 48px;
+            bottom: -2px;
+            width: 2px;
+            background: var(--border);
+        }
+        .flow-step .step-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+            z-index: 1;
+        }
+        .flow-step .step-content h4 {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .flow-step .step-content p {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .flow-step .step-content code {
+            background: rgba(0,0,0,0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: #fbbf24;
+        }
+
+        /* Real-world cases */
+        .case-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 12px;
+        }
+        .case-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            transition: all 0.2s;
+        }
+        .case-card:hover { border-color: rgba(139,92,246,0.3); transform: translateY(-2px); }
+        .case-card h4 {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .case-card p {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+        .case-card .attack-detail {
+            background: rgba(0,0,0,0.3);
+            border-radius: 6px;
+            padding: 8px 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--accent-amber);
+        }
+
+        /* Animated indicators */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-in { animation: fadeInUp 0.3s ease-out; }
+
+        @keyframes pulse-red {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); }
+        }
+        .pulse-danger { animation: pulse-red 1.5s infinite; }
+
+        @keyframes pulse-green {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(16,185,129,0); }
+        }
+        .pulse-success { animation: pulse-green 1.5s infinite; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+        /* Impact warning */
+        .impact-box {
+            border-radius: 10px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            font-size: 13px;
+        }
+        .impact-box.danger { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); }
+        .impact-box.success { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2); }
+        .impact-box .icon { font-size: 20px; flex-shrink: 0; }
+        .impact-box p { color: var(--text-secondary); }
+        .impact-box strong { color: var(--text-primary); }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 32px;
+            color: var(--text-muted);
+            font-size: 12px;
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ========================= HEADER ========================= -->
+<div class="hero">
+    <h1>🔓 Memahami BOLA: Serangan API #1 Dunia</h1>
+    <p>Demo interaktif untuk memahami Broken Object Level Authorization — kerentanan paling berbahaya di OWASP API Security Top 10, dalam konteks sistem multi-tenant BPS.</p>
+    <div class="badge-row">
+        <span class="badge owasp">⚠️ OWASP API #1 (2023)</span>
+        <span class="badge api">🌐 REST API Multi-Tenant</span>
+        <span class="badge zt">🛡️ Mitigasi: Zero Trust + Context-Aware</span>
+    </div>
+</div>
+
+<div class="container">
+
+    <!-- ========================= SECTION 1: APA ITU BOLA? ========================= -->
+    <div class="section">
+        <div class="section-header">
+            <div class="section-number blue">1</div>
+            <div>
+                <div class="section-title">Apa Itu BOLA?</div>
+                <div class="section-subtitle">Broken Object Level Authorization — Penjelasan Simpel</div>
+            </div>
+        </div>
+
+        <div class="explain-box">
+            <h3>💡 Analogi Gampang</h3>
+            <p style="margin-bottom: 12px;">
+                Bayangkan <strong>loker di kantor</strong>. Lo punya kunci loker nomor <strong>101</strong>.
+                BOLA terjadi ketika satpam <em>hanya mengecek "apakah lo karyawan?"</em>  tapi <strong>tidak mengecek "apakah loker itu MILIK lo?"</strong>
+            </p>
+            <p>
+                Akibatnya: Lo bisa buka loker <strong>102</strong> (punya orang lain) cukup dengan <strong>mengubah nomor</strong>.
+                Di dunia API, "nomor loker" ini adalah parameter ID di URL.
+            </p>
+        </div>
+
+        <div class="card">
+            <div class="flow-steps">
+                <div class="flow-step">
+                    <div class="step-icon" style="background:rgba(16,185,129,0.15);">✅</div>
+                    <div class="step-content">
+                        <h4 style="color:#34d399;">Akses Normal (Benar)</h4>
+                        <p>Operator BPS Jaksel login, akses data wilayahnya sendiri.</p>
+                        <code>GET /api/wilayah/<strong>3174</strong>/penduduk</code>
+                        <p style="margin-top:4px;">→ Server cek: JWT punya tenant_id=3174, URL minta 3174 → ✅ Cocok, data dikasih.</p>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-icon" style="background:rgba(239,68,68,0.15);">💀</div>
+                    <div class="step-content">
+                        <h4 style="color:#f87171;">Serangan BOLA (Ganti ID Aja!)</h4>
+                        <p>Operator Jaksel <strong>ganti angka</strong> di URL, coba akses data Jakpus.</p>
+                        <code>GET /api/wilayah/<strong>3171</strong>/penduduk</code>
+                        <p style="margin-top:4px;">→ Tanpa Zero Trust: Server cuma cek "JWT valid?" → Ya → Data Jakpus <strong>bocor!</strong> 😱</p>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-icon" style="background:rgba(59,130,246,0.15);">🛡️</div>
+                    <div class="step-content">
+                        <h4 style="color:#60a5fa;">Dengan Zero Trust (Solusi Kalian)</h4>
+                        <p>Middleware cek: JWT tenant_id (3174) ≠ URL tenant_id (3171).</p>
+                        <code>HARD VIOLATION → Risk Score 50 → BLOCKED! HTTP 403</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================= SECTION 2: REAL-WORLD CASES ========================= -->
+    <div class="section">
+        <div class="section-header">
+            <div class="section-number purple">2</div>
+            <div>
+                <div class="section-title">Kasus Nyata di Dunia</div>
+                <div class="section-subtitle">BOLA bukan teori — perusahaan besar pernah kena</div>
+            </div>
+        </div>
+
+        <div class="case-grid">
+            <div class="case-card">
+                <h4>🚗 Uber Eats</h4>
+                <p>Ganti <code>locationUUID</code> di URL → bisa lihat revenue & analytics <strong>semua restoran</strong> di platform.</p>
+                <div class="attack-detail">GET /v2/home/{UUID_LAIN}/analytics/sales</div>
+            </div>
+            <div class="case-card">
+                <h4>💰 Coinbase</h4>
+                <p>Ganti <code>asset_name</code> di request body → bisa <strong>jual crypto milik orang lain</strong>.</p>
+                <div class="attack-detail">POST /trade → asset: "BTC" (bukan miliknya)</div>
+            </div>
+            <div class="case-card">
+                <h4>☁️ Nextcloud</h4>
+                <p>Ganti <code>userId</code> di URL → bisa baca jadwal cuti & data pribadi <strong>user lain</strong>.</p>
+                <div class="attack-detail">GET /ooo/{USER_ID_LAIN}/status</div>
+            </div>
+            <div class="case-card">
+                <h4>🛒 E-Commerce (Riset)</h4>
+                <p>Paper <a href="#" style="color:#93c5fd;">Muliono (2021)</a> — BOLA di aplikasi e-commerce & e-banking Indonesia. <strong>Ganti order_id → lihat pesanan orang lain.</strong></p>
+                <div class="attack-detail">GET /orders/{ORDER_ID_ORANG_LAIN}</div>
+            </div>
+        </div>
+
+        <div class="impact-box danger" style="margin-top:16px;">
+            <div class="icon">⚠️</div>
+            <div>
+                <p><strong>Kenapa ini jadi #1 di OWASP?</strong> Karena serangannya <strong>sangat mudah</strong> (cuma ganti angka di URL), <strong>susah dideteksi scanner otomatis</strong> (butuh pemahaman relasi user-data), dan <strong>dampaknya masif</strong> (bocornya data bisa jutaan record sekaligus).</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================= SECTION 3: INTERACTIVE DEMO ========================= -->
+    <div class="section">
+        <div class="section-header">
+            <div class="section-number red">3</div>
+            <div>
+                <div class="section-title">Demo Interaktif: Coba Sendiri!</div>
+                <div class="section-subtitle">Simulasi serangan BOLA pada API BPS — tanpa & dengan proteksi</div>
+            </div>
+        </div>
+
+        <!-- Database View -->
+        <div class="card" style="margin-bottom:20px;">
+            <h4 style="font-size:13px; font-weight:700; margin-bottom:12px; color:#93c5fd;">📦 Database BPS (Shared DB, Shared Schema — semua tenant di satu tabel)</h4>
+            <div style="overflow-x:auto;">
+                <table class="db-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tenant ID</th>
+                            <th>NIK</th>
+                            <th>Nama</th>
+                            <th>Alamat</th>
+                            <th>Status Ekonomi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>3174-0001</td><td><span class="tenant-tag tenant-3174">3174 Jaksel</span></td><td>3174012345670001</td><td>Andi Pratama</td><td>Jl. Fatmawati No.10</td><td>Menengah</td></tr>
+                        <tr><td>3174-0002</td><td><span class="tenant-tag tenant-3174">3174 Jaksel</span></td><td>3174012345670002</td><td>Siti Nurhaliza</td><td>Jl. Cipete Raya No.22</td><td>Mampu</td></tr>
+                        <tr><td>3174-0003</td><td><span class="tenant-tag tenant-3174">3174 Jaksel</span></td><td>3174012345670003</td><td>Budi Santoso</td><td>Jl. TB Simatupang No.5</td><td>Kurang Mampu</td></tr>
+                        <tr style="border-top:2px solid var(--border);"><td>3171-0001</td><td><span class="tenant-tag tenant-3171">3171 Jakpus</span></td><td>3171012345670001</td><td>Dewi Lestari</td><td>Jl. Thamrin No.8</td><td>Mampu</td></tr>
+                        <tr><td>3171-0002</td><td><span class="tenant-tag tenant-3171">3171 Jakpus</span></td><td>3171012345670002</td><td>Rahmat Hidayat</td><td>Jl. Menteng Raya No.15</td><td>Menengah</td></tr>
+                        <tr><td>3171-0003</td><td><span class="tenant-tag tenant-3171">3171 Jakpus</span></td><td>3171012345670003</td><td>Fitri Handayani</td><td>Jl. Cikini No.3</td><td>Kurang Mampu</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Mode Toggle -->
+        <div class="mode-toggle">
+            <button class="mode-btn active vuln" id="btn-vuln" onclick="setMode('vuln')">
+                🔓 Tanpa Proteksi (Rentan)
+            </button>
+            <button class="mode-btn" id="btn-safe" onclick="setMode('safe')">
+                🛡️ Dengan Zero Trust (Aman)
+            </button>
+        </div>
+
+        <!-- Demo Panels -->
+        <div class="demo-area">
+            <!-- Panel Kiri: Attacker -->
+            <div class="demo-panel">
+                <div class="demo-panel-header">
+                    <h4>👤 Login Sebagai</h4>
+                </div>
+                <div class="demo-panel-body">
+                    <div class="field-group">
+                        <label>Operator (Identitas)</label>
+                        <select id="select-operator" onchange="updateDemo()">
+                            <option value="3174">🏢 Operator BPS Jakarta Selatan (3174)</option>
+                            <option value="3171">🏢 Operator BPS Jakarta Pusat (3171)</option>
+                            <option value="3201">🏢 Operator BPS Kab. Bogor (3201)</option>
+                        </select>
+                    </div>
+
+                    <div class="field-group">
+                        <label>🎯 Data yang Ingin Diakses</label>
+                        <select id="select-target" onchange="updateDemo()">
+                            <option value="3174">Wilayah 3174 (Jakarta Selatan)</option>
+                            <option value="3171" selected>Wilayah 3171 (Jakarta Pusat)</option>
+                            <option value="3201">Wilayah 3201 (Kab. Bogor)</option>
+                        </select>
+                    </div>
+
+                    <div class="field-group">
+                        <label>🌐 Request URL yang Dikirim</label>
+                        <div class="url-display" id="url-display">
+                            <span class="method">GET</span> /api/wilayah/<span class="highlight" id="url-tenant">3171</span>/penduduk
+                        </div>
+                    </div>
+
+                    <div id="cross-tenant-warning" class="impact-box danger" style="margin-bottom:14px;">
+                        <div class="icon">⚡</div>
+                        <div><p><strong>Cross-Tenant Request!</strong> JWT: tenant <span id="warn-src">3174</span> → URL: tenant <span id="warn-dst">3171</span></p></div>
+                    </div>
+
+                    <button class="btn btn-attack" id="btn-send" onclick="simulateRequest()">
+                        🚀 Kirim Request
+                    </button>
+
+                    <!-- Response -->
+                    <div class="response-area" id="response-area" style="display:none;">
+                        <div class="response-header" id="response-header"></div>
+                        <div class="response-body" id="response-body"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel Kanan: Server Processing -->
+            <div class="demo-panel">
+                <div class="demo-panel-header">
+                    <h4>⚙️ Proses di Server</h4>
+                </div>
+                <div class="demo-panel-body">
+                    <div id="server-steps" class="flow-steps">
+                        <p style="color:var(--text-muted); font-size:13px; text-align:center; padding:40px 0;">
+                            👆 Klik "Kirim Request" untuk melihat proses server
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================= SECTION 4: COMPARISON ========================= -->
+    <div class="section">
+        <div class="section-header">
+            <div class="section-number green">4</div>
+            <div>
+                <div class="section-title">Perbandingan: Tanpa vs Dengan Proteksi</div>
+                <div class="section-subtitle">Kenapa RBAC saja TIDAK cukup</div>
+            </div>
+        </div>
+
+        <div class="card" style="overflow-x:auto;">
+            <table class="compare-table">
+                <thead>
+                    <tr>
+                        <th style="width:30%;">Aspek</th>
+                        <th class="col-vuln" style="width:35%;">🔓 Tanpa ZT (RBAC Saja)</th>
+                        <th class="col-safe" style="width:35%;">🛡️ Dengan Zero Trust</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Yang Dicek</strong></td>
+                        <td class="col-vuln">"Apakah JWT valid?" → Ya → Lewat</td>
+                        <td class="col-safe">JWT valid? + Tenant cocok? + IP wajar? + Waktu wajar? + Velocity normal?</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cross-Tenant Request</strong></td>
+                        <td class="col-vuln" style="color:#fca5a5;">✅ DIIZINKAN (Data bocor!)</td>
+                        <td class="col-safe" style="color:#6ee7b7;">❌ DIBLOKIR (Score 50, Hard Violation)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>IP Tidak Dikenal</strong></td>
+                        <td class="col-vuln">Tidak dicek sama sekali</td>
+                        <td class="col-safe">⚠️ Soft Violation +20 (flagged, tetap allow)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Akses Jam 3 Pagi</strong></td>
+                        <td class="col-vuln">Tidak dicek sama sekali</td>
+                        <td class="col-safe">⚠️ Soft Violation +10 (flagged, tetap allow)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>100 Request/Menit</strong></td>
+                        <td class="col-vuln">Tidak dicek sama sekali</td>
+                        <td class="col-safe">⚠️ Soft Violation +15 (flagged, tetap allow)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Semua Soft + Hard</strong></td>
+                        <td class="col-vuln" style="color:#fca5a5;">Tetap diizinkan 🤦</td>
+                        <td class="col-safe" style="color:#6ee7b7;">Score 50 → BLOCK + JWT Blacklist 🔒</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Monitoring</strong></td>
+                        <td class="col-vuln">Tidak ada log khusus</td>
+                        <td class="col-safe">Real-time SOC Dashboard + Risk Score</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="impact-box success" style="margin-top:16px;">
+            <div class="icon">💡</div>
+            <div>
+                <p><strong>Desain Risk Score yang cerdas:</strong> Semua Soft Violation digabung = maks 45 (tetap < threshold 50). Artinya operator yang kebetulan pakai IP baru + kerja malam + request banyak <strong>tetap bisa akses</strong>. Yang diblokir HANYA Hard Violation (tenant mismatch = serangan BOLA).</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================= SECTION 5: PRACTICE LABS ========================= -->
+    <div class="section">
+        <div class="section-header">
+            <div class="section-number purple">5</div>
+            <div>
+                <div class="section-title">Mau Latihan Lebih? Lab Gratis</div>
+                <div class="section-subtitle">Vulnerable API yang bisa dijalankan di Docker</div>
+            </div>
+        </div>
+        <div class="case-grid">
+            <div class="case-card">
+                <h4>🏎️ OWASP crAPI</h4>
+                <p><strong>Paling relevan.</strong> Aplikasi lengkap (UI + API) sengaja dibuat rentan. Ada challenge BOLA (#1) persis seperti demo di atas.</p>
+                <div class="attack-detail">docker compose up -d<br>→ http://localhost:8888</div>
+            </div>
+            <div class="case-card">
+                <h4>🧃 OWASP Juice Shop</h4>
+                <p>Web app e-commerce rentan. Ada challenge BOLA/IDOR: akses basket orang lain dengan ganti ID.</p>
+                <div class="attack-detail">docker run -p 3000:3000 bkimminich/juice-shop</div>
+            </div>
+            <div class="case-card">
+                <h4>🔌 vAPI</h4>
+                <p>Vulnerable API (tanpa UI). Fokus murni ke API Security Top 10, termasuk BOLA.</p>
+                <div class="attack-detail">github.com/roottusk/vapi</div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Footer -->
+<div class="footer">
+    Demo Edukasi — Proyek Akhir Keamanan Sistem Informasi — POLSTAT STIS 2026<br>
+    Context-Aware Authorization berbasis Zero Trust untuk Mitigasi BOLA
+</div>
+
+<!-- ========================= JAVASCRIPT ========================= -->
+<script>
+    // --- Simulated Database ---
+    const DATABASE = {
+        '3174': [
+            { id: '3174-0001', tenant_id: '3174', nik: '3174012345670001', nama: 'Andi Pratama', alamat: 'Jl. Fatmawati No.10, Jaksel', status_ekonomi: 'Menengah' },
+            { id: '3174-0002', tenant_id: '3174', nik: '3174012345670002', nama: 'Siti Nurhaliza', alamat: 'Jl. Cipete Raya No.22, Jaksel', status_ekonomi: 'Mampu' },
+            { id: '3174-0003', tenant_id: '3174', nik: '3174012345670003', nama: 'Budi Santoso', alamat: 'Jl. TB Simatupang No.5, Jaksel', status_ekonomi: 'Kurang Mampu' },
+        ],
+        '3171': [
+            { id: '3171-0001', tenant_id: '3171', nik: '3171012345670001', nama: 'Dewi Lestari', alamat: 'Jl. Thamrin No.8, Jakpus', status_ekonomi: 'Mampu' },
+            { id: '3171-0002', tenant_id: '3171', nik: '3171012345670002', nama: 'Rahmat Hidayat', alamat: 'Jl. Menteng Raya No.15, Jakpus', status_ekonomi: 'Menengah' },
+            { id: '3171-0003', tenant_id: '3171', nik: '3171012345670003', nama: 'Fitri Handayani', alamat: 'Jl. Cikini No.3, Jakpus', status_ekonomi: 'Kurang Mampu' },
+        ],
+        '3201': [
+            { id: '3201-0001', tenant_id: '3201', nik: '3201012345670001', nama: 'Ujang Supriatna', alamat: 'Jl. Raya Cibinong No.12, Bogor', status_ekonomi: 'Kurang Mampu' },
+            { id: '3201-0002', tenant_id: '3201', nik: '3201012345670002', nama: 'Neng Komariah', alamat: 'Jl. Parung No.7, Bogor', status_ekonomi: 'Menengah' },
+            { id: '3201-0003', tenant_id: '3201', nik: '3201012345670003', nama: 'Asep Firmansyah', alamat: 'Jl. Dramaga No.20, Bogor', status_ekonomi: 'Mampu' },
+        ],
+    };
+
+    const TENANT_NAMES = { '3174': 'Jaksel', '3171': 'Jakpus', '3201': 'Bogor' };
+
+    let currentMode = 'vuln'; // 'vuln' or 'safe'
+
+    // --- Mode Toggle ---
+    function setMode(mode) {
+        currentMode = mode;
+        document.getElementById('btn-vuln').className = `mode-btn ${mode === 'vuln' ? 'active vuln' : ''}`;
+        document.getElementById('btn-safe').className = `mode-btn ${mode === 'safe' ? 'active safe' : ''}`;
+        document.getElementById('btn-send').className = mode === 'vuln' ? 'btn btn-attack' : 'btn btn-safe';
+        document.getElementById('btn-send').innerHTML = mode === 'vuln' ? '🚀 Kirim Request (Tanpa Proteksi)' : '🛡️ Kirim Request (Dengan Zero Trust)';
+        // Reset response
+        document.getElementById('response-area').style.display = 'none';
+        document.getElementById('server-steps').innerHTML = '<p style="color:var(--text-muted); font-size:13px; text-align:center; padding:40px 0;">👆 Klik tombol untuk melihat proses server</p>';
+    }
+
+    // --- Update Demo Preview ---
+    function updateDemo() {
+        const op = document.getElementById('select-operator').value;
+        const target = document.getElementById('select-target').value;
+        document.getElementById('url-tenant').textContent = target;
+
+        const isCrossTenant = op !== target;
+        const warning = document.getElementById('cross-tenant-warning');
+        warning.style.display = isCrossTenant ? 'flex' : 'none';
+        document.getElementById('warn-src').textContent = op;
+        document.getElementById('warn-dst').textContent = target;
+
+        // Reset response
+        document.getElementById('response-area').style.display = 'none';
+        document.getElementById('server-steps').innerHTML = '<p style="color:var(--text-muted); font-size:13px; text-align:center; padding:40px 0;">👆 Klik tombol untuk melihat proses server</p>';
+    }
+
+    // --- Simulate Request ---
+    async function simulateRequest() {
+        const operator = document.getElementById('select-operator').value;
+        const target = document.getElementById('select-target').value;
+        const isCrossTenant = operator !== target;
+
+        const stepsDiv = document.getElementById('server-steps');
+        const responseArea = document.getElementById('response-area');
+        const responseHeader = document.getElementById('response-header');
+        const responseBody = document.getElementById('response-body');
+
+        stepsDiv.innerHTML = '';
+        responseArea.style.display = 'none';
+
+        // Helper to add steps with delay
+        async function addStep(icon, bg, title, titleColor, desc, delay) {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    const step = document.createElement('div');
+                    step.className = 'flow-step animate-in';
+                    step.innerHTML = `
+                        <div class="step-icon" style="background:${bg};">${icon}</div>
+                        <div class="step-content">
+                            <h4 style="color:${titleColor};">${title}</h4>
+                            <p>${desc}</p>
+                        </div>
+                    `;
+                    stepsDiv.appendChild(step);
+                    resolve();
+                }, delay);
+            });
+        }
+
+        // Step 1: JWT Validation
+        await addStep('🔑', 'rgba(59,130,246,0.15)', 'JWT Validation', '#60a5fa',
+            `Token JWT valid ✅ <br><code>tenant_id: ${operator}</code> (${TENANT_NAMES[operator]})`, 300);
+
+        if (currentMode === 'vuln') {
+            // === VULNERABLE MODE ===
+            await addStep('⚠️', 'rgba(245,158,11,0.15)', 'Authorization Check', '#fbbf24',
+                `Cek: "Apakah JWT valid?" → <strong style="color:#34d399;">Ya</strong><br>❌ <strong>TIDAK mengecek kepemilikan tenant!</strong>`, 600);
+
+            await addStep('📦', 'rgba(139,92,246,0.15)', 'Database Query', '#a78bfa',
+                `<code>SELECT * FROM penduduk WHERE tenant_id = '${target}'</code><br>→ ${DATABASE[target].length} records ditemukan`, 600);
+
+            if (isCrossTenant) {
+                await addStep('💀', 'rgba(239,68,68,0.15)', 'DATA BOCOR!', '#f87171',
+                    `Operator ${TENANT_NAMES[operator]} (${operator}) berhasil mengakses data milik <strong>${TENANT_NAMES[target]} (${target})</strong>!<br>Ini adalah <strong>serangan BOLA</strong>.`, 600);
+            } else {
+                await addStep('✅', 'rgba(16,185,129,0.15)', 'Akses Normal', '#34d399',
+                    `Operator mengakses data milik sendiri. Ini valid.`, 600);
+            }
+
+            // Show response: data leaked
+            responseArea.style.display = 'block';
+            responseArea.className = `response-area ${isCrossTenant ? 'vuln' : 'safe'} animate-in`;
+            responseHeader.className = isCrossTenant ? 'response-header status-200' : 'response-header status-ok';
+            responseHeader.innerHTML = isCrossTenant
+                ? `⚠️ HTTP 200 OK — DATA BOCOR! (Seharusnya 403 Forbidden)`
+                : `✅ HTTP 200 OK — Akses Normal`;
+            responseBody.textContent = JSON.stringify({
+                success: true,
+                tenant_id: target,
+                total: DATABASE[target].length,
+                data: DATABASE[target],
+            }, null, 2);
+
+        } else {
+            // === ZERO TRUST MODE ===
+            await addStep('🌐', 'rgba(6,182,212,0.15)', 'Context Collection', '#22d3ee',
+                `IP: 192.168.1.10 (kantor) ✅<br>Waktu: ${new Date().getHours()}:00 (jam kerja) ✅<br>Velocity: 1 req/menit ✅`, 600);
+
+            if (isCrossTenant) {
+                await addStep('🔴', 'rgba(239,68,68,0.15)', 'OPA Evaluation: HARD VIOLATION!', '#f87171',
+                    `JWT tenant <code>${operator}</code> ≠ URL tenant <code>${target}</code><br><strong>Risk Score: 50</strong> (Threshold: 50) → <strong style="color:#ef4444;">BLOCKED</strong>`, 600);
+
+                await addStep('🚫', 'rgba(239,68,68,0.15)', 'Enforcement: DENY', '#f87171',
+                    `HTTP 403 Forbidden<br>JWT di-blacklist di Redis selama 1 jam 🔒<br>Event dikirim ke SOC Dashboard 📡`, 600);
+
+                responseArea.style.display = 'block';
+                responseArea.className = 'response-area safe animate-in';
+                responseHeader.className = 'response-header status-403';
+                responseHeader.innerHTML = '🛡️ HTTP 403 FORBIDDEN — Serangan BOLA Berhasil Diblokir!';
+                responseBody.textContent = JSON.stringify({
+                    error: 'Forbidden',
+                    message: 'Access Denied. Hard Violation: Tenant Mismatch (BOLA Detected)',
+                    risk_score: 50,
+                }, null, 2);
+            } else {
+                await addStep('🟢', 'rgba(16,185,129,0.15)', 'OPA Evaluation: CLEAN', '#34d399',
+                    `JWT tenant <code>${operator}</code> == URL tenant <code>${target}</code> ✅<br>Soft Violations: 0<br><strong>Risk Score: 0</strong> → <strong style="color:#10b981;">ALLOWED</strong>`, 600);
+
+                await addStep('✅', 'rgba(16,185,129,0.15)', 'Enforcement: ALLOW', '#34d399',
+                    `HTTP 200 OK — Akses sah, data dikembalikan.`, 600);
+
+                responseArea.style.display = 'block';
+                responseArea.className = 'response-area safe animate-in';
+                responseHeader.className = 'response-header status-ok';
+                responseHeader.innerHTML = '✅ HTTP 200 OK — Akses Sah, Data Dikembalikan';
+                responseBody.textContent = JSON.stringify({
+                    success: true,
+                    tenant_id: target,
+                    total: DATABASE[target].length,
+                    data: DATABASE[target],
+                }, null, 2);
+            }
+        }
+    }
+
+    // Init
+    updateDemo();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,555 @@
+​
+​
+ 
+IMPLEMENTASI SISTEM DETEKSI INTRUSI MENGGUNAKAN SNORT DAN 
+HONEYPOT UNTUK PENINGKATAN KEAMANAN JARINGAN KOMPUTER 
+ 
+ 
+ 
+Dosen Pengampu: Farid Ridho, S.S.T., M.T. 
+ 
+Oleh: 
+3SI2 / Kelompok 7 
+ 
+Andi Nur Wahidah Azhar Mangkona 222212499 
+Daniel Dabra Pasongli 
+222212555 
+Gildbran Abisha Tersena Sitepu 
+222212627 
+Muhammad Nabil Fawwaz 
+222212759 
+Yulia Wida Kharisma 
+222212926 
+ 
+ 
+ PROGRAM STUDI D-IV KOMPUTASI STATISTIK 
+POLITEKNIK STATISTIKA STIS 
+2025
+ 
+1 / 20 
+​
+​
+ 
+I.​
+Pendahuluan 
+Seiring dengan pesatnya perkembangan teknologi informasi, ketergantungan pada jaringan 
+komputer dan layanan digital menjadi semakin tinggi. Kemajuan teknologi informasi telah 
+meningkatkan efisiensi komunikasi dan pertukaran informasi, serta mempermudah berbagai 
+pekerjaan manusia sehari-hari. Namun, di sisi lain, peningkatan ini juga menimbulkan tantangan 
+serius terkait faktor keamanan dan meningkatnya risiko serangan siber yang dapat mengganggu 
+layanan jaringan serta membahayakan integritas dan kerahasiaan data. 
+Lanskap ancaman siber terus berkembang, didorong oleh faktor-faktor seperti ketegangan 
+geopolitik dan kemajuan teknologi seperti kecerdasan buatan (AI) generatif. Laporan industri 
+terbaru menunjukkan tren yang mengkhawatirkan; pada tahun 2024, tingkat infeksi malware pada 
+PC bisnis meningkat lebih dari 28%, mencapai level tertinggi sejak tahun 2020 [1]. Ancaman 
+utama seperti ransomware, serangan rekayasa sosial, dan malware terus mendominasi, dengan 
+serangan yang semakin canggih dan sulit dideteksi [2]. 
+Dalam konteks ini, peran administrator jaringan menjadi krusial. Administrator memegang 
+tanggung jawab penuh atas ketersediaan dan kerahasiaan informasi, pemeliharaan perangkat keras 
+dan lunak, serta pemantauan kinerja jaringan. Namun, dengan volume dan kompleksitas serangan 
+yang terus meningkat, sistem pertahanan manual yang bergantung pada kecepatan respons 
+administrator tidak lagi memadai [3]. Banyak organisasi masih mengandalkan firewall sebagai 
+sistem keamanan utama, padahal firewall bersifat pasif dan kurang mampu mendeteksi ancaman 
+yang lebih kompleks. Untuk membantu tugas administrator dan meningkatkan postur keamanan, 
+diperlukan sebuah sistem keamanan otomatis yang proaktif dan andal. 
+Pendekatan yang lebih proaktif dibutuhkan, salah satunya adalah implementasi sistem 
+deteksi intrusi (IDS) seperti Snort, yang mampu memonitor dan menganalisis lalu lintas jaringan 
+secara real-time. Penelitian ini berfokus pada implementasi sistem keamanan berlapis yang 
+menggabungkan dua teknologi pertahanan siber yang telah teruji: Snort dan Honeypot. Snort 
+adalah sebuah Intrusion Detection System (IDS) berbasis open-source yang berfungsi untuk 
+menganalisis lalu lintas jaringan secara real-time guna mendeteksi upaya penyusupan dan serangan 
+[4]. Sementara itu, Honeypot adalah sebuah sistem yang sengaja dirancang untuk menjadi umpan 
+(decoy) bagi para penyerang. Dengan memikat peretas ke dalam lingkungan yang terkontrol, 
+administrator dapat mempelajari taktik, teknik, dan prosedur (TTP) serangan yang digunakan tanpa 
+membahayakan sistem produksi yang sebenarnya [5]. 
+2 / 20 
+​
+​
+ 
+Kombinasi Snort dan Honeypot menawarkan sebuah mekanisme pertahanan yang 
+komprehensif dan berlapis yang lebih kuat terhadap berbagai jenis serangan siber. Honeypot 
+bertindak sebagai perangkap yang menjebak penyerang, sementara Snort secara aktif memantau, 
+mencatat, dan memberikan peringatan terkait setiap aktivitas mencurigakan yang terjadi. Sistem ini 
+diharapkan dapat mendeteksi berbagai jenis serangan, termasuk fase pengintaian seperti port 
+scanning 
+dan 
+serangan 
+brute-force, 
+serta 
+mengidentifikasi 
+malware 
+[6]. 
+Dengan 
+mengimplementasikan sistem ini, diharapkan keamanan jaringan dapat ditingkatkan secara 
+signifikan dengan menyediakan deteksi dini dan analisis mendalam terhadap ancaman yang ada. 
+Adapun tujuan dari penelitian ini adalah sebagai berikut. 
+1.​ Merancang dan mengimplementasikan IDS berbasis Snort yang terintegrasi dengan Honeypot. 
+2.​ Mengkonfigurasi Snort untuk mendeteksi serangan seperti port scanning dan DoS. 
+3.​ Menerapkan Honeypot untuk menarik dan mencatat aktivitas penyerang. 
+4.​ Menganalisis efektivitas sistem Snort dan Honeypot dalam mendeteksi dan merekam log 
+serangan jaringan. 
+ 
+II.​
+Kajian Pustaka 
+1.​ Jaringan Komputer 
+Jaringan komputer adalah sebuah sistem yang terdiri dari dua atau lebih perangkat 
+komputasi yang saling terhubung untuk memungkinkan komunikasi dan berbagi sumber 
+daya. Dalam arsitektur yang paling umum, yaitu model client-server, sebuah perangkat 
+(klien) meminta layanan atau sumber daya, dan perangkat lain yang lebih kuat (server) 
+menyediakan layanan tersebut [7]. Tujuan fundamental dari jaringan komputer adalah 
+untuk memfasilitasi pertukaran data yang andal dan efisien, memungkinkan akses bersama 
+ke informasi dan periferal, serta mendukung aplikasi terdistribusi. 
+2.​ Sistem Deteksi Intrusi (IDS) Snort 
+Intrusion Detection System (IDS) adalah teknologi keamanan, baik berupa 
+perangkat keras maupun perangkat lunak, yang secara proaktif memantau aktivitas jaringan 
+atau sistem untuk mengidentifikasi potensi ancaman, aktivitas berbahaya, atau pelanggaran 
+kebijakan keamanan [8]. IDS modern sering diklasifikasikan menjadi dua tipe utama: 
+Network-based IDS (NIDS), yang menganalisis lalu lintas di seluruh jaringan, dan 
+Host-based IDS (HIDS), yang memantau aktivitas pada perangkat individual. Banyak 
+3 / 20 
+​
+​
+ 
+sistem canggih saat ini juga mengintegrasikan teknik machine learning untuk mendeteksi 
+anomali dan serangan yang belum pernah dikenal sebelumnya. 
+Snort adalah salah satu NIDS open-source yang paling dikenal dan berpengaruh dalam 
+sejarah keamanan siber. Awalnya dikembangkan sebagai sistem deteksi berbasis aturan 
+(rule-based), Snort bekerja dengan memeriksa setiap paket data dan membandingkannya 
+dengan basis data aturan serangan yang telah ditentukan [9]. Jika sebuah paket cocok 
+dengan suatu aturan, Snort akan mencatatnya dan mengirimkan peringatan (alert). Versi 
+terbarunya, Snort 3, telah mengalami perombakan arsitektur yang signifikan, termasuk 
+dukungan multithreading untuk meningkatkan kinerja pemrosesan paket pada jaringan 
+berkecepatan tinggi [10]. Namun, untuk penelitian ini versi Snort yang digunakan adalah 
+Snort 2.7.0. 
+3.​ Honeypot 
+Honeypot adalah mekanisme keamanan siber yang bekerja dengan cara menciptakan 
+sistem, aplikasi, atau data palsu yang sengaja dirancang untuk menjadi target menarik bagi 
+penyerang [11]. Tujuan utamanya bukan untuk memblokir serangan, melainkan untuk 
+menjebak, menipu, dan mempelajari perilaku, alat, serta motif penyerang dalam lingkungan 
+yang terkontrol. Honeypot dikategorikan berdasarkan tingkat interaksinya: low-interaction 
+yang menyimulasikan layanan dasar, dan high-interaction yang menyediakan sistem 
+operasi penuh untuk analisis mendalam. 
+4.​ Keamanan Jaringan Berlapis 
+Strategi keamanan modern menganut konsep pertahanan berlapis (defense in depth), 
+di mana berbagai kontrol keamanan ditempatkan di seluruh infrastruktur IT untuk 
+memberikan perlindungan redundan [13]. Kombinasi antara IDS dan honeypot adalah 
+implementasi klasik dari strategi ini. IDS berfungsi sebagai "alarm" di garis depan yang 
+mendeteksi kemungkinan adanya penyusupan, sementara honeypot berfungsi sebagai 
+sistem perangkap (decoy) dan pengumpul data intelijen ancaman. 
+Konsep ini telah berevolusi menjadi apa yang dikenal sebagai Deception 
+Technology. Dalam paradigma ini, honeypot dan aset palsu lainnya disebar di seluruh 
+jaringan untuk menyesatkan penyerang, memperlambat pergerakan mereka, dan 
+memberikan peringatan dini dengan tingkat akurasi tinggi. Ketika dikombinasikan dengan 
+4 / 20 
+​
+​
+ 
+IDS, pendekatan ini tidak hanya mendeteksi serangan tetapi juga secara aktif mengalihkan 
+penyerang dari aset nyata, memberikan tim keamanan informasi yang lebih kaya tentang 
+teknik serangan yang sedang digunakan [14].​
+ 
+ 
+III.​
+Metodologi 
+Penelitian ini menggunakan pendekatan studi kasus dengan tahapan yang dirancang untuk 
+mengidentifikasi dan mengukur risiko keamanan jaringan komputer. Langkah-langkah metodologi 
+secara rinci adalah sebagai berikut: 
+1.​ Studi Literatur dan Analisis Kebutuhan Sistem (Prepare & Plan) 
+a.​ Melakukan studi literatur mendalam mengenai IDS, Snort, Honeypot, dan teknik 
+analisis log serangan. 
+b.​ Menganalisis kebutuhan sistem keamanan jaringan, mengidentifikasi potensi 
+ancaman, dan menentukan lingkup implementasi. 
+c.​ Mempersiapkan perangkat keras (server untuk Snort & Honeypot, attacker-PC) dan 
+perangkat lunak yang dibutuhkan. 
+2.​ Perancangan Sistem (Design) 
+a.​ Merancang topologi jaringan yang akan digunakan untuk implementasi dan 
+pengujian sistem. 
+b.​ Merancang arsitektur integrasi Snort dan Honeypot, termasuk alur pengumpulan 
+data log. 
+c.​ Merancang rules untuk Snort guna mendeteksi serangan spesifik (misalnya, Ping 
+Flood, DoS). 
+d.​ Merancang konfigurasi untuk Honeypot agar menarik bagi penyerang. 
+3.​ Implementasi Sistem (Implement) 
+a.​ Menginstal dan mengkonfigurasi Snort pada server yang ditentukan. 
+b.​ Menginstal dan mengkonfigurasi Honeypot pada server Honeypot. 
+c.​ Mengkonfigurasi sistem pencatatan log untuk Snort dan Honeypot. 
+4.​ Pengujian dan Operasional (Operate) 
+a.​ Melakukan simulasi serangan terhadap sistem yang telah dibangun, seperti Ping 
+Flood, DoS Attack (TCP, UDP, HTTP Flooding), port scanning (menggunakan 
+Nmap), dan brute force SSH. 
+b.​ Memantau kinerja Snort dan Honeypot dalam mendeteksi dan mencatat serangan. 
+5 / 20 
+​
+​
+ 
+c.​ Menganalisis file log yang dihasilkan oleh Snort dan Honeypot untuk 
+mengidentifikasi detail serangan. 
+5.​ Analisis dan Optimasi (Optimize) 
+a.​ Menganalisis data serangan yang telah dikumpulkan dari log untuk mengidentifikasi 
+pola dan tren serangan. 
+b.​ Mengevaluasi kinerja sistem secara keseluruhan, termasuk akurasi deteksi dan 
+dampak pada resource server (misalnya, penggunaan CPU saat serangan). 
+c.​ Melakukan optimasi pada konfigurasi Snort dan Honeypot berdasarkan hasil 
+evaluasi untuk meningkatkan efektivitas sistem. 
+ 
+IV.​
+Implementasi 
+1.​ Perangkat 
+a.​ Perangkat Keras (Hardware) 
+●​ Komputer  
+b.​ Perangkat Lunak (Software) 
+●​ Snort  
+●​ Honeypot 
+●​ Ubuntu Server 
+●​ Virtualbox 
+2.​ Instalasi dan Konfigurasi Snort  
+a.​ Update Sistem 
+Langkah pertama adalah memperbarui sistem agar semua repository dan paket 
+sistem berada dalam kondisi terbaru. Hal ini penting untuk memastikan 
+kompatibilitas dan menghindari masalah dependency saat instalasi Snort dilakukan. 
+sudo apt update 
+Perintah ini akan menyinkronkan ulang daftar paket dari server repository Ubuntu. 
+6 / 20 
+​
+​
+ 
+ 
+Gambar 4.1 update sistem 
+b.​ Install Snort 
+Setelah sistem diperbarui, langkah selanjutnya adalah melakukan instalasi Snort 
+menggunakan perintah apt. Perintah ini akan mengunduh dan memasang Snort 
+beserta dependensi yang diperlukan. 
+sudo apt install snort 
+Perintah ini akan menampilkan informasi versi Snort yang telah terinstal. Verifikasi 
+ini penting untuk memastikan bahwa Snort sudah terpasang dan dapat dijalankan 
+dengan benar di sistem. 
+7 / 20 
+​
+​
+ 
+ 
+Gambar 4.2  instalasi snort 
+Selama proses instalasi, pengguna akan diminta untuk mengisikan jaringan 
+internal (misalnya 192.168.1.0/24) yang akan digunakan oleh Snort untuk 
+mendeteksi lalu lintas jaringan. Informasi ini sangat penting karena menentukan 
+cakupan monitoring yang dilakukan Snort: 
+ 
+Gambar 4.3 konfigurasi jaringan internal 
+c.​ Cek Instalasi Snort 
+8 / 20 
+​
+​
+ 
+Setelah proses instalasi selesai, pastikan bahwa Snort berhasil terpasang dengan 
+menjalankan perintah berikut: 
+snort -V 
+Perintah ini akan menampilkan informasi versi Snort yang telah terinstal. Verifikasi 
+ini penting untuk memastikan bahwa Snort sudah terpasang dan dapat dijalankan 
+dengan benar di sistem. 
+ 
+Gambar 4.4 cek instalasi snort 
+d.​ Menjalankan Snort untuk Monitoring 
+Setelah Snort berhasil diinstal, tahap selanjutnya adalah menjalankannya untuk 
+memulai proses monitoring jaringan. Untuk keperluan pengujian dasar, Snort dapat 
+dijalankan langsung menggunakan perintah sudo snort 
+ 
+Gambar 4.5 jalankan snort 
+9 / 20 
+​
+​
+ 
+3.​ Instalasi dan Konfigurasi Honeypot 
+a.​ Menggunakan lingkungan virtual 
+Dalam proses instalasi honeypot, diperlukan lingkungan virtual (virtual 
+environment) untuk mengisolasi dependencies dan paket yang dibutuhkan. 
+Lingkungan virtual membantu mencegah konflik antar paket sistem dan 
+memastikan instalasi berjalan dengan bersih. Perintah untuk membuat lingkungan 
+virtual adalah python3 -m venv venv dan untuk mengaktifkannya menggunakan 
+source venv/bin/activate. Proses pembuatan lingkungan virtual dapat dilihat pada 
+Gambar 4.6 di bawah ini. 
+ 
+ 
+​
+​
+​
+​
+Gambar 4.6 pembuatan lingkungan virtual 
+b.​ Update package 
+Sebelum melakukan instalasi honeypot, sistem perlu diperbarui untuk memastikan 
+semua repository package dalam kondisi terbaru. Proses update dan upgrade 
+package repository sangat penting untuk menghindari error dependency dan 
+memastikan kompatibilitas paket yang akan diinstall. Perintah untuk melakukan 
+update package repository adalah sudo apt update dan untuk mengupgrade 
+package adalah sudo apt upgrade -y . Proses update dan upgrade package dapat 
+dilihat pada Gambar 4.7 dan Gambar 4.8 di bawah ini. 
+ 
+Gambar 4.7 Update package 
+ 
+Gambar 4.8 Upgrade package 
+c.​ Install package pendukung honeypot 
+10 / 20 
+​
+​
+ 
+Dalam proses instalasi honeypot diperlukan beberapa package pendukung yang 
+krusial untuk menjalankan sistem honeypot dengan optimal. Package PostgreSQL 
+dibutuhkan sebagai database untuk menyimpan log dan data aktivitas yang 
+tertangkap oleh honeypot. Package libpq-dev diperlukan sebagai library 
+development untuk koneksi PostgreSQL. Package python3-psycopg2 berfungsi 
+sebagai adapter PostgreSQL untuk Python. Package python3-venv dan python3-pip 
+diperlukan untuk manajemen lingkungan virtual dan instalasi package Python. 
+Perintah untuk menginstall semua package pendukung adalah sudo apt install 
+postgresql libpq-dev python3-psycopg2 python3-venv python3-pip -y. Proses 
+instalasi package pendukung dapat dilihat pada Gambar 4.9 di bawah ini. 
+ 
+Gambar 4.9 Instalasi package pendukung 
+d.​ Install honeypot 
+Setelah semua package pendukung berhasil diinstall, langkah selanjutnya adalah 
+menginstall package honeypot utama menggunakan pip (Python Package Installer). 
+Perintah untuk menginstall honeypot adalah pip install honeypot. Proses instalasi 
+honeypot dapat dilihat pada Gambar 4.5 di bawah ini. 
+ 
+11 / 20 
+​
+​
+ 
+Gambar 4.10 Instalasi honeypot 
+e.​ Membuat direktori honeypot 
+Untuk mengorganisir file dan konfigurasi honeypot dengan baik, diperlukan 
+direktori khusus sebagai workspace proyek. Direktori ini akan menjadi tempat 
+penyimpanan semua file konfigurasi, log, dan script yang berkaitan dengan 
+honeypot. Perintah untuk membuat direktori adalah mkdir ProyekHoneypot  dan 
+untuk pindah ke direktori tersebut menggunakan cd ProyekHoneypot. 
+ 
+Gambar 4.11 Membuat direktori honeypot 
+f.​ Cek ip honeypot​
+ 
+Sebelum mengkonfigurasi honeypot, perlu diketahui alamat IP dari host sistem 
+untuk memastikan konfigurasi jaringan yang tepat. Perintah untuk memeriksa IP 
+host adalah hostname -I yang akan menampilkan semua alamat IP yang 
+terkonfigurasi pada sistem. 
+ 
+​
+​
+​
+ 
+ 
+Gambar 4.12 Pengecekan ip honeypot 
+g.​ Konfigurasi dan menjalankan honeypot 
+Langkah terakhir adalah mengkonfigurasi dan menjalankan honeypot dengan 
+layanan-layanan yang diinginkan. Parameter username dan password ditetapkan 
+untuk autentikasi layanan honeypot. Penggunaan sudo diperlukan karena beberapa 
+port membutuhkan privilege administrator. Perintah untuk konfigurasi dan 
+menjalankan honeypot adalah : 
+sudo /home/ksikelompok7/ProyekHoneypot/venv/bin/python3 -m honeypots 
+--setup ftp:21,ssh:2222,telnet:2323,http:8080,https:8443,pop3:1110 --username 
+umberella --password Umber3lL4#  
+Proses konfigurasi dan menjalankan honeypot dapat dilihat pada Gambar 4.8 di 
+bawah ini.​
+ 
+12 / 20 
+​
+​
+ 
+​
+​
+ 
+Gambar 4.13 Konfigurasi honeypot 
+ 
+V.​
+Hasil dan Pembahasan 
+Hasil Penelitian 
+1.​ Fase Operasional 
+a.​ Uji Coba Jaringan 
+​
+Tahapan pertama melakukan uji coba jaringan dari honeypot apakah sistem 
+honeypot telah terkoneksi dengan perangkat penyerang dengan melakukan ping 
+pada perangkat penyerang, hasil ping dapat lihat pada Gambar 5.1 dibawah ini.  
+​
+ 
+​
+Gambar 5.1 hasil ping 
+13 / 20 
+​
+​
+ 
+Terdapat 14 paket yang berhasil dikirim dan diterima, dengan 0% packet loss. 
+Artinya, koneksi antar perangkat berjalan lancar. 
+b.​ Port Scanning 
+​
+Pada tahapan ini akan dilakukan post scanning yang berguna untuk melihat 
+port-port yang tersedia pada sistem honeypot yang telah dikonfigurasikan 
+sebelumnya dengan menggunakan tool NMAP. Hasil post scanning dapat dilihat 
+pada Gambar 5.2 dibawah ini.   
+ 
+​
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Gambar 5.2 hasil port scanning 
+Dengan melakukan port scanning dengan tool nmap ini, diperoleh beberapa port 
+yang terbuka pada sistem honeypot, dan juga memberikan informasi lainnya seperti 
+versi dari port yang digunakan, jenis service, dan status dari port tersbut. Berikut ini 
+adalah hasil IDS dari sistem honeypot dan juga snort terhadap serangan port 
+scanning yang dilakukan: 
+1.​ Hasil dari snort 
+14 / 20 
+​
+​
+ 
+ 
+Gambar 5.3 hasil IDS snort (port scanning) 
+2.​ Hasil dari honeypot​
+ 
+Gambar 5.4 hasil IDS honeypot (port scanning)​
+ 
+c.​ Hydra Attack 
+​
+Tahapan serangan selanjutnya dengan melakukan serang hydra attack, hydra attack 
+adalah tool sejenis brute force yang digunakan untuk menemukan username dan 
+password dari sistem honeypot. Hasil serangan hydra attack dapat dilihat pada 
+Gambar 5.5 dibawah in. 
+15 / 20 
+​
+​
+ 
+​
+ 
+Gambar 5.5 Hydra Attack 
+​
+Dengan menggunakan tool hydra ini, perangkat penyerang berhasil menemukan 
+username dan password dari port FTP:21 pada sistem honeypot yang bisa 
+dimanfaatkan untuk melakukan login pada sistem. Tool hydra mendapatkan 
+username “umberella” dan password “Umb3RelL4” pada sistem honeypot, hasil 
+serangan ini terekam pada sistem IDS honeypot dan Snort, hasil IDS yang diperoleh 
+dapat dilihat di bawah ini:  
+1.​ Hasil dari Snort 
+ 
+Gambar 5.6 hasil IDS Snort (Hydra Attack) 
+2.​ Hasil dari Honeypot 
+ 
+​
+Gambar 5.7 hasil IDS honeypot (Hydra Attack) 
+Dari hasil IDS honeypot dan snort didapatkan informasi dari penyerang berupa 
+alamat IP address yang digunakan penyerang, tanggal dan waktu penyerangan 
+dilakukan, dan juga port yang dituju oleh penyerang. Dalam IDS ini penyerang 
+melakukan serangan pada port FTP/21, pada Gambar 5.7 terdapat informasi bahwa 
+pernyerang berhasil login dan menemukan username dan password yang terdapat 
+pada sistem honeypot. 
+ 
+16 / 20 
+​
+​
+ 
+d.​ Akses Port FTP 
+​
+Pada tahapan ini dilakukan aktivitas login pada ke sistem honeypot pada port ftp/21, 
+hal ini dilakukan untuk memastikan bahwa username dan password yang didapat 
+dari serangan hydra attack adalah benar. Hasil akses login ke port FTP dapat dilihat 
+pada Gambar 5.8 dibawah ini. 
+ 
+Gambar 5.8 Akses port ftp 
+Dari hasil Gambar 5.8 penyerang berhasil melakukan login pada port FTP/21 di 
+sistem honeypot dengan menggunakan username dan password yang telah 
+didapatkan dengan menggunakan tool hydra attack. Namun upaya yang dilakukan 
+penyerang ini tidak berarti apa-apa, karena sistem honeypot ini tidak memiliki file 
+apapun di dalamnya yang bisa dimanfaatkan oleh penyerang. Hasil akses login 
+penyerang ke port FTP/21 ini terengkap oleh sistem IDS honeypot dan snort, hasil 
+IDS dapat dilihat Gambar 5.9 dan Gambar 5.10. 
+1.​ Hasil dari Snort 
+ 
+Gambar 5.9 hasil IDS Snort (port ftp) 
+2.​ Hasil dari honeypot 
+ 
+17 / 20 
+​
+​
+ 
+Gambar 5.10 hasil IDS honeypot (port ftp) 
+Dari hasil IDS sistem honeypot dan snort ini memberikan informasi bahwa 
+penyerang berhasil melakukan login ke dalam port ftp/21 menggunakan usernama 
+dan password dari serangan hydra. Alamat ip address dan waktu serangan yang 
+dilakukan penyerang juga tercatat pada sistem IDS honeypot dan snort. 
+​
+​
+ 
+VI.​
+Kesimpulan 
+Berdasarkan hasil implementasi dan pengujian sistem deteksi intrusi menggunakan Snort 
+dan Honeypot, dapat disimpulkan bahwa sistem berhasil diimplementasikan dan diintegrasikan 
+dengan baik. Kombinasi kedua teknologi ini membentuk sebuah sistem keamanan jaringan berlapis 
+yang efektif untuk mendeteksi berbagai jenis serangan siber. Sistem ini tidak hanya mampu 
+menjalankan fungsinya secara teknis, tetapi juga memberikan kontribusi nyata dalam memperkuat 
+pertahanan jaringan terhadap ancaman yang terus berkembang. 
+Dari segi efektivitas deteksi, sistem menunjukkan performa yang sangat baik dalam 
+mengidentifikasi serangan. Serangan port scanning yang dilakukan menggunakan tool Nmap 
+berhasil dideteksi oleh Snort dan Honeypot secara bersamaan. Selain itu, serangan brute force 
+(Hydra attack) yang menargetkan layanan FTP juga berhasil diidentifikasi dan dicatat. Aktivitas 
+login serta akses ke dalam sistem Honeypot berhasil direkam dengan detail, memberikan gambaran 
+menyeluruh mengenai proses serangan yang dilakukan oleh pihak penyerang. 
+Kedua sistem terbukti saling melengkapi satu sama lain dalam menyampaikan informasi 
+keamanan yang kritis. Snort berfungsi sebagai sistem deteksi aktif yang menganalisis lalu lintas 
+jaringan secara real-time dan memberikan peringatan berdasarkan pola serangan yang telah 
+ditentukan. Di sisi lain, Honeypot berperan sebagai sistem pasif yang dirancang untuk memancing 
+penyerang dan mencatat segala interaksi yang terjadi. Pendekatan ini memungkinkan administrator 
+untuk memperoleh informasi yang lebih dalam mengenai taktik, teknik, dan prosedur (TTP) yang 
+digunakan oleh penyerang. 
+Selain itu, baik Snort maupun Honeypot mampu menghasilkan log yang sangat 
+komprehensif. Informasi penting seperti alamat IP penyerang, waktu serangan, jenis serangan, serta 
+aktivitas yang dilakukan selama intrusi tercatat dengan rapi dan sistematis. Log tersebut dapat 
+digunakan sebagai bahan analisis forensik dan evaluasi keamanan jaringan lebih lanjut. 
+18 / 20 
+​
+​
+ 
+Secara keseluruhan, implementasi sistem IDS berbasis Snort dan Honeypot terbukti 
+meningkatkan postur keamanan jaringan. Sistem ini tidak hanya mampu mendeteksi ancaman 
+secara dini, tetapi juga memberikan visibilitas yang lebih baik terhadap aktivitas mencurigakan 
+dalam jaringan. Dengan demikian, sistem ini dapat dijadikan sebagai solusi praktis dan efektif 
+dalam membangun pertahanan jaringan yang adaptif dan tangguh terhadap serangan siber. 
+ 
+VII.​
+Daftar Pustaka 
+[1] OpenText, "2025 OpenText Cybersecurity Threat Report," 2025. [Online]. Available: 
+https://www.opentext.com/en/media/report/2025-opentext-cybersecurity-threat-report-en.pdf 
+[2] ENISA, "Threat Landscape 2024," European Union Agency for Cybersecurity, Oct. 2024. 
+[Online]. Available: https://www.enisa.europa.eu/topics/cyber-threats/threat-landscape 
+[3] R. Dafiudin, Mengganyang Hacker dengan Snort. Surabaya: Andi Offset, 2010. 
+[4] A. Akhriana, "Web App Pendeteksi Jenis Serangan Jaringan Komputer dengan Memanfaatkan 
+Snort Dan Log Honeypot," STMIK, Makasar, 2019. 
+[5] P. L. Restanti, "Analisis Kolaborasi IDS Snort dan Honeypot," 2014, pp. 1-27. 
+[6] T. A. Cahyanto, H. Oktavianto, and A. W. Royan, "Analisis Dan Implementasi Honeypot 
+Menggunakan Dionaea Sebagai Penunjang Keamanan Jaringan," J. Sist. Teknol. Inf. Indones., vol. 
+1, pp. 86-92, 2016. 
+[7] Kurose, J. F., & Ross, K. W. (2021). Computer Networking: A Top-Down Approach (8th ed.). 
+Pearson. 
+[8] Zeadally, S., & Adi, E. (2021). A Survey on Intrusion Detection and Prevention Systems for 
+Cyber-Physical Systems. Journal of Network and Computer Applications, 191, 103157. 
+[9] Caswell, B., & Beale, J. (2020). Snort Cookbook. O'Reilly Media. 
+[10] The Snort Team. (2022). Snort 3: The Next Generation of Open Source Intrusion Prevention. 
+Cisco Systems, Inc. White Paper. 
+19 / 20 
+​
+​
+ 
+[11] Al-Hawawreh, M., & Moustafa, N. (2020). A Review of Deception Systems in Cybersecurity: 
+Techniques, Applications, and Challenges. IEEE Access, 8, 175975-176000. 
+[13] Fraunholz, D., Krohmer, D., & Schotten, H. D. (2018). The Role of Defense in Depth and 
+Deception in Industrial Cybersecurity. 2018 IEEE 16th International Conference on Industrial 
+Informatics (INDIN), 869-874. 
+[14] Rowe, N. C. (2021). A Survey of Deception in Cybersecurity. ACM Computing Surveys 
+(CSUR), 54(7), 1-37. 
+ 
+ 
+20 / 20 
