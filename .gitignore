@@ -3,6 +3,8 @@ dist/
 .env
 docs/
 *.pdf
-Bab3_Metodologi_Proposal.md
-Briefing_Tim_Proyek.md
-Gambaran_Umum_Proyek.md
+*.md
+!README.md
+*.db
+*.db-shm
+*.db-wal
