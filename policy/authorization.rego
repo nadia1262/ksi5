@@ -36,7 +36,19 @@ soft_violation_scores[score] {
 }
 
 soft_violation_scores[score] {
-    input.context.is_high_velocity == true
+    input.context.velocity_count > 60
+    score := 50
+}
+
+soft_violation_scores[score] {
+    input.context.velocity_count > 30
+    input.context.velocity_count <= 60
+    score := 25
+}
+
+soft_violation_scores[score] {
+    input.context.velocity_count > 10
+    input.context.velocity_count <= 30
     score := 15
 }
 
