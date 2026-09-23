@@ -159,6 +159,16 @@ export default function DashboardMonitoring({ ztEnabled, onToggleZt, logs, onCle
                             <button className="btn btn--secondary btn--sm" onClick={onClearLogs}>
                                 Hapus Log
                             </button>
+                            <a
+                                href="http://localhost:3200"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn btn--secondary btn--sm"
+                                style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                                title="Buka Grafana Monitoring Dashboard"
+                            >
+                                📊 Grafana
+                            </a>
                         </div>
                     </div>
 

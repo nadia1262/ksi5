@@ -14,6 +14,17 @@
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
 const jwksRsa = require('jwks-rsa');
+const { logSecurityEvent } = require('../logger');
+
+// Helper to broadcast to Socket.IO dashboard and push structured log to Loki
+function dispatchLog(io, logEntry) {
+    if (io) io.emit('security-log', logEntry);
+    try {
+        logSecurityEvent(logEntry);
+    } catch (err) {
+        console.warn('[ZT-MIDDLEWARE] Failed to dispatch log to Loki:', err.message);
+    }
+}
 
 // -------------------------------------------
 // A. JWT Verification (Keycloak)
@@ -162,7 +173,7 @@ function createZeroTrustMiddleware(redisClient, io) {
                 reason: 'Zero Trust Disabled (Bypass Mode)',
                 latency_ms: Date.now() - startTime,
             };
-            if (io) io.emit('security-log', logEntry);
+            dispatchLog(io, logEntry);
             return next();
         }
 
@@ -179,7 +190,7 @@ function createZeroTrustMiddleware(redisClient, io) {
                 reason: 'Missing or Invalid Authorization Header',
                 latency_ms: Date.now() - startTime,
             };
-            if (io) io.emit('security-log', logEntry);
+            dispatchLog(io, logEntry);
             return res.status(401).json({ error: 'Unauthorized', message: 'Token JWT tidak ditemukan.' });
         }
 
@@ -217,7 +228,7 @@ function createZeroTrustMiddleware(redisClient, io) {
                             context: { is_new_ip: false, is_off_hours: false, is_high_velocity: false },
                             latency_ms: Date.now() - startTime,
                         };
-                        if (io) io.emit('security-log', logEntry);
+                        dispatchLog(io, logEntry);
                         return res.status(403).json({ error: 'Forbidden', risk_score: 100, message: 'Token JWT telah di-blacklist karena pelanggaran keamanan sebelumnya.' });
                     }
                 } catch (err) {
@@ -263,8 +274,8 @@ function createZeroTrustMiddleware(redisClient, io) {
                 latency_ms: Date.now() - startTime,
             };
 
-            // Kirim log ke SOC Dashboard via WebSocket
-            if (io) io.emit('security-log', logEntry);
+            // Kirim log ke SOC Dashboard via WebSocket & Loki
+            dispatchLog(io, logEntry);
 
             // CEK 6: Eksekusi keputusan
             if (decision.allow) {
@@ -302,7 +313,7 @@ function createZeroTrustMiddleware(redisClient, io) {
                 reason: `JWT Verification Failed: ${err.message}`,
                 latency_ms: Date.now() - startTime,
             };
-            if (io) io.emit('security-log', logEntry);
+            dispatchLog(io, logEntry);
             return res.status(401).json({ error: 'Unauthorized', message: `Token JWT tidak valid: ${err.message}` });
         }
     };

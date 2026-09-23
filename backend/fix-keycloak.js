@@ -7,6 +7,60 @@ async function fix() {
     })).json();
     const h = { 'Authorization': `Bearer ${t.access_token}`, 'Content-Type': 'application/json' };
 
+    // Pastikan tenant_id selalu dipetakan ke access token client.
+    const clientsRes = await fetch('http://localhost:8080/admin/realms/zt-realm/clients?clientId=zt-client', { headers: h });
+    const clients = await clientsRes.json();
+    const clientId = clients[0]?.id;
+    if (!clientId) throw new Error('Client zt-client tidak ditemukan. Jalankan setup-keycloak.js terlebih dahulu.');
+
+    const mapperConfig = {
+        name: 'tenant_id',
+        protocol: 'openid-connect',
+        protocolMapper: 'oidc-usermodel-attribute-mapper',
+        config: {
+            'user.attribute': 'tenant_id',
+            'claim.name': 'tenant_id',
+            'jsonType.label': 'String',
+            'id.token.claim': 'true',
+            'access.token.claim': 'true',
+            'userinfo.token.claim': 'true',
+            'multivalued': 'false',
+        },
+    };
+
+    const mappersRes = await fetch(`http://localhost:8080/admin/realms/zt-realm/clients/${clientId}/protocol-mappers/models`, { headers: h });
+    const mappers = await mappersRes.json();
+    const tenantMapper = mappers.find(mapper => mapper.name === 'tenant_id');
+    if (!tenantMapper) {
+        const createMapperRes = await fetch(`http://localhost:8080/admin/realms/zt-realm/clients/${clientId}/protocol-mappers/models`, {
+            method: 'POST', headers: h, body: JSON.stringify(mapperConfig),
+        });
+        if (!createMapperRes.ok) throw new Error(`Gagal membuat mapper tenant_id: HTTP ${createMapperRes.status}`);
+        console.log('Mapper tenant_id berhasil dibuat.');
+    } else {
+        await fetch(`http://localhost:8080/admin/realms/zt-realm/clients/${clientId}/protocol-mappers/models/${tenantMapper.id}`, {
+            method: 'PUT', headers: h, body: JSON.stringify({ ...tenantMapper, ...mapperConfig }),
+        });
+        console.log('Mapper tenant_id sudah dipastikan aktif.');
+    }
+
+    // Keycloak 24 membuang atribut yang belum terdaftar di User Profile.
+    const profileRes = await fetch('http://localhost:8080/admin/realms/zt-realm/users/profile', { headers: h });
+    const profile = await profileRes.json();
+    if (!profile.attributes.some(attribute => attribute.name === 'tenant_id')) {
+        profile.attributes.push({
+            name: 'tenant_id',
+            displayName: 'Tenant ID',
+            permissions: { view: ['admin'], edit: ['admin'] },
+            multivalued: false,
+        });
+        const updateProfileRes = await fetch('http://localhost:8080/admin/realms/zt-realm/users/profile', {
+            method: 'PUT', headers: h, body: JSON.stringify(profile),
+        });
+        if (!updateProfileRes.ok) throw new Error(`Gagal mendaftarkan tenant_id di User Profile: HTTP ${updateProfileRes.status}`);
+        console.log('Atribut tenant_id berhasil didaftarkan di User Profile.');
+    }
+
     const configs = {
         'operator-jaksel': { tenant_id: '3174', email: 'jaksel@bps.go.id', firstName: 'Operator', lastName: 'Jaksel' },
         'operator-jakpus': { tenant_id: '3171', email: 'jakpus@bps.go.id', firstName: 'Operator', lastName: 'Jakpus' },

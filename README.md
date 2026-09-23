@@ -40,7 +40,7 @@ Tunggu sekitar 30-60 detik sampai Keycloak siap. Cek dengan:
 docker ps
 ```
 
-Harus ada 3 container running: `zt_keycloak`, `zt_opa`, `zt_redis`.
+Harus ada 5 container running: `zt_keycloak`, `zt_opa`, `zt_redis`, `zt_loki`, `zt_grafana`.
 
 ### 3. Install Dependencies
 
@@ -159,13 +159,15 @@ Express API Gateway (server.js)
 
 ## Port yang Digunakan
 
-| Service | Port |
-|---------|------|
-| Frontend (Vite) | http://localhost:5173 |
-| Backend (Express) | http://localhost:3001 |
-| Keycloak | http://localhost:8080 |
-| OPA | http://localhost:8181 |
-| Redis | localhost:6379 |
+| Service | Port | Keterangan |
+|---------|------|------------|
+| Frontend (Vite) | http://localhost:5173 | Portal Data & Simulasi |
+| Backend (Express) | http://localhost:3001 | Zero Trust API Gateway |
+| Keycloak | http://localhost:8080 | Identity Provider (IdP) |
+| OPA | http://localhost:8181 | Policy Engine |
+| Redis | localhost:6379 | Context Store & Blacklist |
+| Loki | http://localhost:3100 | Log Aggregation Engine |
+| Grafana | http://localhost:3200 | SOC Monitoring (User: `admin` / Pass: `admin`) |
 
 ---
 

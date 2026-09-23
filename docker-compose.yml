@@ -30,6 +30,34 @@ services:
     volumes:
       - redis_data:/data
 
+  loki:
+    image: grafana/loki:2.9.4
+    container_name: zt_loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./monitoring/loki-config.yml:/etc/loki/local-config.yaml
+      - loki_data:/loki
+
+  grafana:
+    image: grafana/grafana:10.3.1
+    container_name: zt_grafana
+    ports:
+      - "3200:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/etc/grafana/dashboards
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - loki
+
 volumes:
   keycloak_data:
   redis_data:
+  loki_data:
+  grafana_data:

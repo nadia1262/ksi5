@@ -15,6 +15,7 @@ const Redis = require('ioredis');
 const { initializeDatabase } = require('./database');
 const { createZeroTrustMiddleware } = require('./middleware/zeroTrustMiddleware');
 const createApiRoutes = require('./routes/api');
+const { logger } = require('./logger');
 
 const PORT = process.env.PORT || 3001;
 
@@ -148,6 +149,8 @@ server.listen(PORT, () => {
     console.log(`  Keycloak      : ${process.env.KEYCLOAK_URL}`);
     console.log(`  OPA           : ${process.env.OPA_URL}`);
     console.log(`  Redis         : ${process.env.REDIS_URL}`);
+    console.log(`  Loki          : ${process.env.LOKI_URL || 'http://localhost:3100'}`);
+    console.log(`  Grafana       : http://localhost:3200 (admin/admin)`);
     console.log(`  ZT Status     : ${app.locals.ztEnabled ? '🟢 ON' : '🔴 OFF'}`);
     console.log('============================================');
     console.log('');
