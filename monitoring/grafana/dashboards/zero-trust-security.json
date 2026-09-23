@@ -1,435 +1,509 @@
 {
-  "annotations": {
-    "list": []
-  },
+  "annotations": { "list": [] },
   "editable": true,
   "fiscalYearStartMonth": 0,
-  "graphTooltip": 0,
+  "graphTooltip": 1,
   "id": null,
   "links": [],
   "liveNow": true,
   "panels": [
     {
       "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 0
-      },
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
       "id": 100,
-      "title": "Zero Trust Security Overview",
+      "title": "Ringkasan Evaluasi Zero Trust Gateway",
       "type": "row"
     },
+
     {
-      "datasource": {
-        "type": "loki",
-        "uid": "Loki"
-      },
+      "datasource": { "type": "loki", "uid": "Loki" },
+      "description": "Jumlah seluruh permintaan API yang melewati Zero Trust Gateway dalam rentang waktu yang dipilih.",
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "blue",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
+          "noValue": "0",
+          "color": { "mode": "fixed", "fixedColor": "#3274D9" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#3274D9", "value": null }] }
+        }
       },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 0,
-        "y": 1
-      },
+      "gridPos": { "h": 5, "w": 4, "x": 0, "y": 1 },
       "id": 1,
       "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "center",
         "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value_and_name"
       },
-      "pluginVersion": "10.3.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "Loki"
-          },
-          "editorMode": "code",
-          "expr": "count_over_time({app=\"sidaptor\"} [$__range])",
-          "queryType": "range",
-          "refId": "A"
-        }
-      ],
-      "title": "Total Security Requests",
+      "targets": [{
+        "datasource": { "type": "loki", "uid": "Loki" },
+        "expr": "sum(count_over_time({app=\"sidaptor\"} [$__range]))",
+        "queryType": "instant",
+        "refId": "A"
+      }],
+      "title": "Total Request",
       "type": "stat"
     },
+
     {
-      "datasource": {
-        "type": "loki",
-        "uid": "Loki"
-      },
+      "datasource": { "type": "loki", "uid": "Loki" },
+      "description": "Jumlah permintaan yang LOLOS evaluasi Zero Trust dan diizinkan mengakses sumber daya.",
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
+          "noValue": "0",
+          "color": { "mode": "fixed", "fixedColor": "#2E7D32" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#2E7D32", "value": null }] }
+        }
       },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 6,
-        "y": 1
-      },
+      "gridPos": { "h": 5, "w": 4, "x": 4, "y": 1 },
       "id": 2,
       "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "center",
         "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value_and_name"
       },
-      "pluginVersion": "10.3.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "Loki"
-          },
-          "editorMode": "code",
-          "expr": "count_over_time({app=\"sidaptor\", action=\"ALLOWED\"} [$__range])",
-          "queryType": "range",
-          "refId": "A"
-        }
-      ],
-      "title": "Allowed Requests",
+      "targets": [{
+        "datasource": { "type": "loki", "uid": "Loki" },
+        "expr": "sum(count_over_time({app=\"sidaptor\", action=\"ALLOWED\"} [$__range]))",
+        "queryType": "instant",
+        "refId": "A"
+      }],
+      "title": "Diizinkan",
       "type": "stat"
     },
+
     {
-      "datasource": {
-        "type": "loki",
-        "uid": "Loki"
-      },
+      "datasource": { "type": "loki", "uid": "Loki" },
+      "description": "Jumlah permintaan yang DITOLAK oleh Zero Trust Gateway karena melanggar kebijakan keamanan (skor risiko >= 50 atau BOLA terdeteksi).",
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
+          "noValue": "0",
+          "color": { "mode": "fixed", "fixedColor": "#C62828" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#C62828", "value": null }] }
+        }
       },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 12,
-        "y": 1
-      },
+      "gridPos": { "h": 5, "w": 4, "x": 8, "y": 1 },
       "id": 3,
       "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "center",
         "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value_and_name"
       },
-      "pluginVersion": "10.3.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "Loki"
-          },
-          "editorMode": "code",
-          "expr": "count_over_time({app=\"sidaptor\", action=\"BLOCKED\"} [$__range])",
-          "queryType": "range",
-          "refId": "A"
-        }
-      ],
-      "title": "Blocked (Security Violations)",
+      "targets": [{
+        "datasource": { "type": "loki", "uid": "Loki" },
+        "expr": "sum(count_over_time({app=\"sidaptor\", action=\"BLOCKED\"} [$__range]))",
+        "queryType": "instant",
+        "refId": "A"
+      }],
+      "title": "Diblokir",
       "type": "stat"
     },
+
     {
-      "datasource": {
-        "type": "loki",
-        "uid": "Loki"
-      },
+      "datasource": { "type": "loki", "uid": "Loki" },
+      "description": "Jumlah serangan BOLA (Broken Object Level Authorization) yang terdeteksi. Terjadi ketika operator mencoba mengakses data wilayah yang bukan miliknya.",
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "semi-dark-red",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
+          "noValue": "0",
+          "color": { "mode": "fixed", "fixedColor": "#880E4F" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#880E4F", "value": null }] }
+        }
       },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 18,
-        "y": 1
-      },
+      "gridPos": { "h": 5, "w": 4, "x": 12, "y": 1 },
       "id": 4,
       "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "center",
         "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value_and_name"
       },
-      "pluginVersion": "10.3.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "Loki"
-          },
-          "editorMode": "code",
-          "expr": "count_over_time({app=\"sidaptor\"} |= `BOLA` [$__range])",
-          "queryType": "range",
-          "refId": "A"
-        }
-      ],
-      "title": "BOLA Attacks Detected",
+      "targets": [{
+        "datasource": { "type": "loki", "uid": "Loki" },
+        "expr": "sum(count_over_time({app=\"sidaptor\"} |= `BOLA` [$__range]))",
+        "queryType": "instant",
+        "refId": "A"
+      }],
+      "title": "Serangan BOLA",
       "type": "stat"
     },
+
     {
-      "datasource": {
-        "type": "loki",
-        "uid": "Loki"
+      "datasource": { "type": "loki", "uid": "Loki" },
+      "description": "Jumlah permintaan cepat beruntun (>10 request dalam 60 detik dari IP yang sama). Mengindikasikan brute force, token guessing, atau bot scraping.",
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "0",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "#37474F", "value": null },
+            { "color": "#E65100", "value": 1 }
+          ]}
+        }
       },
+      "gridPos": { "h": 5, "w": 4, "x": 16, "y": 1 },
+      "id": 201,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value_and_name"
+      },
+      "targets": [{
+        "datasource": { "type": "loki", "uid": "Loki" },
+        "expr": "sum(count_over_time({app=\"sidaptor\", is_high_velocity=\"true\"} [$__range]))",
+        "queryType": "instant",
+        "refId": "A"
+      }],
+      "title": "Brute Force",
+      "type": "stat"
+    },
+
+    {
+      "datasource": { "type": "loki", "uid": "Loki" },
+      "description": "Jumlah permintaan dari IP yang belum pernah tercatat sebelumnya untuk tenant terkait. Masing-masing menambah +20 skor risiko.",
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "0",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "#37474F", "value": null },
+            { "color": "#6A1B9A", "value": 1 }
+          ]}
+        }
+      },
+      "gridPos": { "h": 5, "w": 4, "x": 20, "y": 1 },
+      "id": 202,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value_and_name"
+      },
+      "targets": [{
+        "datasource": { "type": "loki", "uid": "Loki" },
+        "expr": "sum(count_over_time({app=\"sidaptor\", is_new_ip=\"true\"} [$__range]))",
+        "queryType": "instant",
+        "refId": "A"
+      }],
+      "title": "IP Baru",
+      "type": "stat"
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 6 },
+      "id": 300,
+      "title": "Analisis Lalu Lintas & Distribusi Keamanan",
+      "type": "row"
+    },
+
+    {
+      "datasource": { "type": "loki", "uid": "Loki" },
+      "description": "Proporsi permintaan yang Diizinkan (hijau) vs Diblokir (merah) dalam rentang waktu yang dipilih.",
       "fieldConfig": {
         "defaults": {
           "custom": {
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            }
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false }
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": { "id": "byRegexp", "options": ".*ALLOWED.*" },
+            "properties": [
+              { "id": "displayName", "value": "Diizinkan (ALLOWED)" },
+              { "id": "color", "value": { "fixedColor": "#2E7D32", "mode": "fixed" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byRegexp", "options": ".*BLOCKED.*" },
+            "properties": [
+              { "id": "displayName", "value": "Diblokir (BLOCKED)" },
+              { "id": "color", "value": { "fixedColor": "#C62828", "mode": "fixed" } }
+            ]
+          }
+        ]
       },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 0,
-        "y": 5
-      },
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 7 },
       "id": 5,
       "options": {
         "legend": {
           "displayMode": "table",
-          "placement": "right",
+          "placement": "bottom",
           "showLegend": true,
           "values": ["value", "percent"]
         },
-        "pieType": "pie",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
+        "pieType": "donut",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "tooltip": { "mode": "single", "sort": "none" }
       },
-      "pluginVersion": "10.3.1",
       "targets": [
         {
-          "datasource": {
-            "type": "loki",
-            "uid": "Loki"
-          },
-          "editorMode": "code",
-          "expr": "sum by (action) (count_over_time({app=\"sidaptor\"} [$__range]))",
-          "queryType": "range",
+          "datasource": { "type": "loki", "uid": "Loki" },
+          "expr": "sum(count_over_time({app=\"sidaptor\", action=\"ALLOWED\"} [$__range]))",
+          "legendFormat": "ALLOWED",
+          "queryType": "instant",
           "refId": "A"
+        },
+        {
+          "datasource": { "type": "loki", "uid": "Loki" },
+          "expr": "sum(count_over_time({app=\"sidaptor\", action=\"BLOCKED\"} [$__range]))",
+          "legendFormat": "BLOCKED",
+          "queryType": "instant",
+          "refId": "B"
         }
       ],
-      "title": "Action Ratio (ALLOWED vs BLOCKED)",
+      "title": "Rasio Keputusan (Izin vs Blokir)",
       "type": "piechart"
     },
+
     {
-      "datasource": {
-        "type": "loki",
-        "uid": "Loki"
-      },
+      "datasource": { "type": "loki", "uid": "Loki" },
+      "description": "Grafik lalu lintas permintaan per menit yang dikelompokkan berdasarkan keputusan keamanan (ALLOWED/BLOCKED). Berguna untuk melihat pola dan lonjakan serangan.",
       "fieldConfig": {
         "defaults": {
           "custom": {
-            "drawStyle": "bars",
-            "lineInterpolation": "linear",
-            "barAlignment": 0,
-            "lineWidth": 1,
-            "fillOpacity": 80,
-            "gradientMode": "none",
-            "spanNulls": false,
-            "showPoints": "auto",
-            "pointSize": 5,
-            "stacking": {
-              "mode": "normal",
-              "group": "A"
-            },
-            "axisPlacement": "auto",
-            "axisLabel": "Count",
             "axisColorMode": "text",
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "hideFrom": {
-              "tooltip": false,
-              "viz": false,
-              "legend": false
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "color": {
-            "mode": "palette-classic"
+            "axisLabel": "Request / menit",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "gradientMode": "opacity",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 4,
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
           },
           "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "ALLOWED" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "#2E7D32", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "BLOCKED" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "#C62828", "mode": "fixed" } }]
+          }
+        ]
       },
-      "gridPos": {
-        "h": 8,
-        "w": 16,
-        "x": 8,
-        "y": 5
-      },
+      "gridPos": { "h": 8, "w": 18, "x": 6, "y": 7 },
       "id": 6,
       "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
+        "legend": { "calcs": ["sum"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [{
+        "datasource": { "type": "loki", "uid": "Loki" },
+        "expr": "sum by (action) (rate({app=\"sidaptor\"}[1m]))",
+        "queryType": "range",
+        "refId": "A"
+      }],
+      "title": "Lalu Lintas Keamanan (Request Rate per Menit)",
+      "type": "timeseries"
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 15 },
+      "id": 200,
+      "title": "Deteksi Ancaman: BOLA, Brute Force, IP Mencurigakan & Waktu Akses",
+      "type": "row"
+    },
+
+    {
+      "datasource": { "type": "loki", "uid": "Loki" },
+      "description": "Daftar seluruh alamat IP yang mengakses API, dikelompokkan berdasarkan status keamanannya. Berguna untuk mengetahui IP mana yang paling sering diblokir atau diizinkan.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": {
+            "align": "center",
+            "cellOptions": { "type": "auto" },
+            "inspect": false,
+            "minWidth": 100
+          },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "text", "value": null }] }
         },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "action" },
+            "properties": [
+              { "id": "displayName", "value": "Status" },
+              { "id": "custom.width", "value": 130 },
+              { "id": "custom.cellOptions", "value": { "type": "color-background", "mode": "basic" } },
+              { "id": "mappings", "value": [
+                { "type": "value", "options": {
+                  "BLOCKED": { "color": "#C62828", "index": 0, "text": "DIBLOKIR" },
+                  "ALLOWED": { "color": "#2E7D32", "index": 1, "text": "DIIZINKAN" }
+                }}
+              ]}
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Value #A" },
+            "properties": [
+              { "id": "displayName", "value": "Jumlah Request" },
+              { "id": "custom.width", "value": 130 },
+              { "id": "custom.cellOptions", "value": { "type": "color-text" } },
+              { "id": "thresholds", "value": { "mode": "absolute", "steps": [
+                { "color": "text", "value": null },
+                { "color": "#E65100", "value": 5 },
+                { "color": "#C62828", "value": 10 }
+              ]}}
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "source_tenant" },
+            "properties": [
+              { "id": "displayName", "value": "Kode Wilayah" },
+              { "id": "custom.width", "value": 120 }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 16 },
+      "id": 204,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": ["Value #A"],
+          "reducer": ["sum"],
+          "show": true
+        },
+        "showHeader": true,
+        "sortBy": [{ "desc": true, "displayName": "Jumlah Request" }]
+      },
+      "targets": [{
+        "datasource": { "type": "loki", "uid": "Loki" },
+        "expr": "sum by (source_tenant, action) (count_over_time({app=\"sidaptor\"} [$__range]))",
+        "queryType": "instant",
+        "refId": "A"
+      }],
+      "title": "Aktivitas per Tenant & Status Keamanan",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": { "Time": true },
+            "indexByName": { "source_tenant": 0, "action": 1, "Value #A": 2 },
+            "renameByName": {}
+          }
         }
+      ],
+      "type": "table"
+    },
+
+    {
+      "datasource": { "type": "loki", "uid": "Loki" },
+      "description": "Perbandingan intensitas 3 jenis ancaman secara real-time: Serangan BOLA (merah), Brute Force/lonjakan request (oranye), dan akses di luar jam dinas (kuning).",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "axisColorMode": "text",
+            "axisLabel": "Event / menit",
+            "axisPlacement": "auto",
+            "drawStyle": "bars",
+            "fillOpacity": 70,
+            "gradientMode": "none",
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "normal" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "BOLA (Akses Wilayah Lain)" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "#C62828", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Brute Force (Velocity Tinggi)" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "#E65100", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Akses Luar Jam Dinas" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "#F9A825", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "IP Baru / Tidak Dikenal" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "#6A1B9A", "mode": "fixed" } }]
+          }
+        ]
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 16 },
+      "id": 205,
+      "options": {
+        "legend": { "calcs": ["sum"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
       },
       "targets": [
         {
-          "datasource": {
-            "type": "loki",
-            "uid": "Loki"
-          },
-          "editorMode": "code",
-          "expr": "sum by (action) (rate({app=\"sidaptor\"}[1m]))",
+          "datasource": { "type": "loki", "uid": "Loki" },
+          "expr": "sum(rate({app=\"sidaptor\"} |= `BOLA` [1m]))",
+          "legendFormat": "BOLA (Akses Wilayah Lain)",
           "queryType": "range",
           "refId": "A"
+        },
+        {
+          "datasource": { "type": "loki", "uid": "Loki" },
+          "expr": "sum(rate({app=\"sidaptor\", is_high_velocity=\"true\"} [1m]))",
+          "legendFormat": "Brute Force (Velocity Tinggi)",
+          "queryType": "range",
+          "refId": "B"
+        },
+        {
+          "datasource": { "type": "loki", "uid": "Loki" },
+          "expr": "sum(rate({app=\"sidaptor\", is_off_hours=\"true\"} [1m]))",
+          "legendFormat": "Akses Luar Jam Dinas",
+          "queryType": "range",
+          "refId": "C"
+        },
+        {
+          "datasource": { "type": "loki", "uid": "Loki" },
+          "expr": "sum(rate({app=\"sidaptor\", is_new_ip=\"true\"} [1m]))",
+          "legendFormat": "IP Baru / Tidak Dikenal",
+          "queryType": "range",
+          "refId": "D"
         }
       ],
-      "title": "Security Events Traffic Rate",
+      "title": "Timeline Ancaman (BOLA vs Brute Force vs Off-Hours vs New IP)",
       "type": "timeseries"
     },
+
     {
       "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 13
-      },
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 25 },
       "id": 101,
-      "title": "Live Security Logs & Audits",
+      "title": "Log Audit Keamanan Real-Time",
       "type": "row"
     },
+
     {
-      "datasource": {
-        "type": "loki",
-        "uid": "Loki"
-      },
-      "gridPos": {
-        "h": 10,
-        "w": 24,
-        "x": 0,
-        "y": 14
-      },
+      "datasource": { "type": "loki", "uid": "Loki" },
+      "description": "Seluruh catatan kejadian keamanan dari Zero Trust Gateway secara live. Setiap baris log berisi informasi IP, tenant, endpoint, keputusan (ALLOWED/BLOCKED), skor risiko, dan alasan.",
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 26 },
       "id": 7,
       "options": {
         "dedupStrategy": "none",
@@ -441,43 +515,26 @@
         "sortOrder": "Descending",
         "wrapLogMessage": true
       },
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "Loki"
-          },
-          "editorMode": "code",
-          "expr": "{app=\"sidaptor\"}",
-          "queryType": "range",
-          "refId": "A"
-        }
-      ],
-      "title": "Zero Trust Security Logs (Live Streams)",
+      "targets": [{
+        "datasource": { "type": "loki", "uid": "Loki" },
+        "expr": "{app=\"sidaptor\"}",
+        "queryType": "range",
+        "refId": "A"
+      }],
+      "title": "Seluruh Log Kejadian Keamanan (Live Stream)",
       "type": "logs"
     }
   ],
   "refresh": "5s",
   "schemaVersion": 39,
-  "tags": ["zero-trust", "sidaptor", "security"],
-  "templating": {
-    "list": []
-  },
-  "time": {
-    "from": "now-30m",
-    "to": "now"
-  },
+  "tags": ["zero-trust", "sidaptor", "security", "bola", "brute-force"],
+  "templating": { "list": [] },
+  "time": { "from": "now-1h", "to": "now" },
   "timepicker": {
-    "refresh_intervals": [
-      "5s",
-      "10s",
-      "30s",
-      "1m",
-      "5m"
-    ]
+    "refresh_intervals": ["5s", "10s", "30s", "1m", "5m"]
   },
   "timezone": "browser",
   "title": "Zero Trust Security Monitor",
   "uid": "zero-trust-monitor",
-  "version": 1
+  "version": 5
 }
