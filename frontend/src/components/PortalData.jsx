@@ -418,74 +418,31 @@ export default function PortalData({ token, tenantId, currentUser, ztEnabled, on
 
     return (
         <div className="content-scrollable">
-            {/* ---- 1. BANNER SAMBUTAN (SIMPUL JABAR) ---- */}
-            {showWelcomeBanner && (
-                <div className="welcome-banner">
-                    <div className="welcome-banner__left">
-                        <CheckCircleIcon size={18} color="#059669" />
-                        <span>
-                            Selamat datang, <strong>{currentUser?.label || 'Operator BPS'}</strong>! Sistem siap memantau progres pendataan lapangan dan evaluasi kepatuhan Zero Trust.
-                        </span>
-                    </div>
-                    <button
-                        className="welcome-banner__close"
-                        onClick={() => setShowWelcomeBanner(false)}
-                        title="Tutup banner"
-                    >
-                        &times;
-                    </button>
-                </div>
-            )}
-
-            {/* ---- 2. HEADER HALAMAN & TOMBOL AKSI CEPAT ---- */}
+            {/* ---- 1. HEADER HALAMAN & AKSI ---- */}
             <div className="page-header-row">
                 <div className="page-header__title-group">
-                    <h1>Monitoring Pendataan Penduduk (SE2026)</h1>
-                    <p>Rekapitulasi Target, Capaian Sektor Kependudukan, dan Rincian Manajemen Entitas Wilayah</p>
+                    <h1>Data Kependudukan</h1>
+                    <p>Monitoring capaian kependudukan dan kontrol otorisasi wilayah.</p>
                 </div>
 
                 <div className="page-header__actions">
-                    <button className="btn-pill btn-pill--blue" onClick={() => setSelectedKab(tenantId)}>
-                        <GlobeIcon size={15} /> Nasional / Wilayah
+                    <button className="btn btn--secondary" onClick={() => loadPenduduk(selectedKab)} title="Segarkan data">
+                        <RefreshIcon size={14} /> Refresh
                     </button>
-                    <button className="btn-pill btn-pill--green" onClick={handleExportCSV}>
-                        <DownloadIcon size={15} /> Download Rekap Excel
-                    </button>
-                    <button className="btn-pill btn-pill--outline" onClick={() => loadPenduduk(selectedKab)}>
-                        <RefreshIcon size={15} /> Refresh
+                    <button className="btn btn--secondary" onClick={handleExportCSV} title="Ekspor data">
+                        <DownloadIcon size={14} /> Ekspor Data
                     </button>
                     <button
-                        className="btn-pill btn-pill--danger"
+                        className="btn btn--danger"
                         onClick={() => setShowBolaModal(true)}
-                        title="Uji akses lintas wilayah untuk simulasi serangan BOLA"
+                        title="Uji simulasi akses lintas wilayah (BOLA)"
                     >
-                        <ShieldAlertIcon size={15} /> Akses Wilayah Lain [BOLA Test]
+                        <ShieldAlertIcon size={14} /> Uji BOLA
                     </button>
                 </div>
             </div>
 
-            {/* ---- 3. STATUS UPDATE & CALLOUT KEBIJAKAN RESMI ---- */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <div>
-                    <div className="update-status-pill">
-                        <InfoIcon size={14} color="#0284c7" /> Data kondisi terakhir update: <span className="update-status-pill__time">{lastUpdateTime}</span>
-                    </div>
-                </div>
-
-                <div className="official-callout">
-                    <div className="official-callout__icon">
-                        <MegaphoneIcon size={20} color="var(--color-primary-light)" />
-                    </div>
-                    <div className="official-callout__content">
-                        <strong className="official-callout__title">Catatan Penting Otorisasi:</strong>
-                        Hak akses operator terikat secara ketat pada yurisdiksi kode wilayah (ABAC Zero Trust). 
-                        Ketika keamanan Zero Trust diaktifkan, OPA (Open Policy Agent) akan memblokir setiap permintaan grafik maupun data kependudukan di luar hak akses operator. 
-                        Ketika keamanan dinonaktifkan di menu monitoring, akses lintas wilayah (BOLA) akan terbuka untuk kebutuhan pengujian.
-                    </div>
-                </div>
-            </div>
-
-            {/* ---- 4. CARD FILTER WILAYAH & KONTROL TAMPILAN ---- */}
+            {/* ---- 2. CARD FILTER WILAYAH ---- */}
             <div className="filter-card">
                 <div className="filter-grid">
                     {/* Filter Provinsi */}
@@ -508,7 +465,7 @@ export default function PortalData({ token, tenantId, currentUser, ztEnabled, on
 
                     {/* Filter Kab/Kota */}
                     <div className="form-field">
-                        <label className="form-field__label">Kabupaten/Kota</label>
+                        <label className="form-field__label">Kabupaten / Kota</label>
                         <select
                             className="filter-select"
                             value={selectedKab}
@@ -517,7 +474,7 @@ export default function PortalData({ token, tenantId, currentUser, ztEnabled, on
                             <option value="">-- Pilih Kab/Kota --</option>
                             {kabkotaList.map(k => (
                                 <option key={k.kode} value={k.kode}>
-                                    {k.nama} ({k.kode}) {k.kode === tenantId ? ' (Wilayah Anda)' : ''}
+                                    {k.nama} ({k.kode}) {k.kode === tenantId ? ' • Wilayah Anda' : ''}
                                 </option>
                             ))}
                         </select>
@@ -534,60 +491,14 @@ export default function PortalData({ token, tenantId, currentUser, ztEnabled, on
                         </button>
                     </div>
                 </div>
-
-                <div className="filter-controls-row">
-                    <div className="filter-controls-left">
-                        <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-secondary)' }}>
-                            Tingkat Tampilan Tabel:
-                        </span>
-                        <select className="chart-select" defaultValue="auto">
-                            <option value="auto">Otomatis (Ikuti Filter)</option>
-                            <option value="all">Tampilkan Semua Terdaftar</option>
-                            <option value="selected">Hanya Wilayah Terpilih</option>
-                        </select>
-                    </div>
-
-                    <div className="filter-controls-right">
-                        {/* Switch Defisit Target */}
-                        <label className="toggle-filter-label toggle-filter-label--danger">
-                            <span className="mini-switch mini-switch--danger">
-                                <input
-                                    type="checkbox"
-                                    checked={onlyDeficit}
-                                    onChange={e => setOnlyDeficit(e.target.checked)}
-                                />
-                                <span className="mini-switch__slider"></span>
-                            </span>
-                            <AlertTriangleIcon size={14} color="#b91c1c" />
-                            Tampilkan Hanya Wilayah Defisit Target (&lt;80%)
-                        </label>
-
-                        {/* Switch Kurang Mampu */}
-                        <label className="toggle-filter-label toggle-filter-label--warning">
-                            <span className="mini-switch">
-                                <input
-                                    type="checkbox"
-                                    checked={onlyKurangMampu}
-                                    onChange={e => setOnlyKurangMampu(e.target.checked)}
-                                />
-                                <span className="mini-switch__slider"></span>
-                            </span>
-                            <FilterIcon size={14} color="#b45309" />
-                            Tampilkan Hanya Status Kurang Mampu
-                        </label>
-                    </div>
-                </div>
             </div>
 
             {/* ---- 5. CENTERPIECE VISUALIZATION: GRAFIK CAPAIAN PER WILAYAH ---- */}
             <div className="chart-card">
                 <div className="chart-card__header">
                     <div className="chart-card__title">
-                        <BarChartIcon size={18} color="#2563eb" />
+                        <BarChartIcon size={18} color="#005F5F" />
                         <span>Grafik Capaian per Wilayah</span>
-                        <span style={{ fontSize: 12, color: 'var(--color-text-muted)', fontWeight: 400 }}>
-                            (Klik salah satu bar wilayah untuk beralih dan menguji akses data)
-                        </span>
                     </div>
 
                     <div className="chart-card__controls">
@@ -833,15 +744,15 @@ export default function PortalData({ token, tenantId, currentUser, ztEnabled, on
                     {/* 4 KPI METRIC CARDS */}
                     <div className="kpi-grid">
                         {/* KPI 1: Total Penduduk */}
-                        <div className="kpi-card" style={{ '--kpi-accent': '#2563eb', '--kpi-bg': '#eff6ff' }}>
+                        <div className="kpi-card" style={{ '--kpi-accent': '#005F5F', '--kpi-bg': '#F0F7F7' }}>
                             <div className="kpi-card__top">
-                                <span className="kpi-card__label">Total Penduduk Terdaftar</span>
+                                 <span className="kpi-card__label">Total Penduduk</span>
                                 <span className="kpi-card__icon"><UsersIcon size={18} /></span>
                             </div>
                             <div className="kpi-card__value">{totalRecords}</div>
                             <div className="kpi-card__footer">
-                                <span style={{ color: 'var(--color-text-muted)' }}>Target Wilayah: 15</span>
-                                <span style={{ fontWeight: 600, color: '#2563eb' }}>
+                                <span style={{ color: 'var(--color-text-muted)' }}>Target: 15</span>
+                                <span style={{ fontWeight: 600, color: '#005F5F' }}>
                                     {Math.min(100, Math.round((totalRecords / 15) * 100))}%
                                 </span>
                             </div>
@@ -861,7 +772,7 @@ export default function PortalData({ token, tenantId, currentUser, ztEnabled, on
                             </div>
                             <div className="kpi-card__value">{stats.mampu}</div>
                             <div className="kpi-card__footer">
-                                <span style={{ color: 'var(--color-text-muted)' }}>Proporsi Wilayah:</span>
+                                <span style={{ color: 'var(--color-text-muted)' }}>Proporsi:</span>
                                 <span style={{ fontWeight: 600, color: '#16a34a' }}>{mampuPct}%</span>
                             </div>
                             <div className="kpi-card__progress-bar">
@@ -880,7 +791,7 @@ export default function PortalData({ token, tenantId, currentUser, ztEnabled, on
                             </div>
                             <div className="kpi-card__value">{stats.menengah}</div>
                             <div className="kpi-card__footer">
-                                <span style={{ color: 'var(--color-text-muted)' }}>Proporsi Wilayah:</span>
+                                <span style={{ color: 'var(--color-text-muted)' }}>Proporsi:</span>
                                 <span style={{ fontWeight: 600, color: '#ea580c' }}>{menengahPct}%</span>
                             </div>
                             <div className="kpi-card__progress-bar">
@@ -894,12 +805,12 @@ export default function PortalData({ token, tenantId, currentUser, ztEnabled, on
                         {/* KPI 4: Status Kurang Mampu */}
                         <div className="kpi-card" style={{ '--kpi-accent': '#dc2626', '--kpi-bg': '#fef2f2' }}>
                             <div className="kpi-card__top">
-                                <span className="kpi-card__label">Status Kurang Mampu</span>
+                                <span className="kpi-card__label">Kurang Mampu</span>
                                 <span className="kpi-card__icon"><AlertCircleIcon size={18} /></span>
                             </div>
                             <div className="kpi-card__value">{stats.kurang_mampu}</div>
                             <div className="kpi-card__footer">
-                                <span style={{ color: 'var(--color-text-muted)' }}>Prioritas Bantuan:</span>
+                                <span style={{ color: 'var(--color-text-muted)' }}>Prioritas:</span>
                                 <span style={{ fontWeight: 600, color: '#dc2626' }}>{kurangMampuPct}%</span>
                             </div>
                             <div className="kpi-card__progress-bar">
@@ -937,37 +848,37 @@ export default function PortalData({ token, tenantId, currentUser, ztEnabled, on
 
                                         {totalRecords > 0 && (
                                             <>
-                                                {/* Segment 1: Mampu (Green) */}
+                                                {/* Segment 1: Mampu (Teal) */}
                                                 <circle
                                                     cx="75"
                                                     cy="75"
                                                     r={radius}
                                                     fill="transparent"
-                                                    stroke="#16a34a"
+                                                    stroke="#005F5F"
                                                     strokeWidth="16"
                                                     strokeDasharray={`${mampuDash} ${circumference}`}
                                                     strokeDashoffset="0"
                                                     transform="rotate(-90 75 75)"
                                                 />
-                                                {/* Segment 2: Menengah (Orange) */}
+                                                {/* Segment 2: Menengah (Soft Teal) */}
                                                 <circle
                                                     cx="75"
                                                     cy="75"
                                                     r={radius}
                                                     fill="transparent"
-                                                    stroke="#ea580c"
+                                                    stroke="#4A8B8B"
                                                     strokeWidth="16"
                                                     strokeDasharray={`${menengahDash} ${circumference}`}
                                                     strokeDashoffset={-mampuDash}
                                                     transform="rotate(-90 75 75)"
                                                 />
-                                                {/* Segment 3: Kurang Mampu (Red) */}
+                                                {/* Segment 3: Kurang Mampu (Warm Amber) */}
                                                 <circle
                                                     cx="75"
                                                     cy="75"
                                                     r={radius}
                                                     fill="transparent"
-                                                    stroke="#dc2626"
+                                                    stroke="#D97706"
                                                     strokeWidth="16"
                                                     strokeDasharray={`${kurangMampuDash} ${circumference}`}
                                                     strokeDashoffset={-(mampuDash + menengahDash)}
@@ -984,16 +895,16 @@ export default function PortalData({ token, tenantId, currentUser, ztEnabled, on
 
                                 <div className="donut-legend">
                                     <div className="donut-legend__item">
-                                        <span className="donut-legend__color" style={{ backgroundColor: '#16a34a' }}></span>
-                                        <span>Mampu: <strong>{stats.mampu} jiwa ({mampuPct}%)</strong></span>
+                                        <span className="donut-legend__color" style={{ backgroundColor: '#005F5F' }}></span>
+                                        <span>Mampu: <strong>{stats.mampu} ({mampuPct}%)</strong></span>
                                     </div>
                                     <div className="donut-legend__item">
-                                        <span className="donut-legend__color" style={{ backgroundColor: '#ea580c' }}></span>
-                                        <span>Menengah: <strong>{stats.menengah} jiwa ({menengahPct}%)</strong></span>
+                                        <span className="donut-legend__color" style={{ backgroundColor: '#4A8B8B' }}></span>
+                                        <span>Menengah: <strong>{stats.menengah} ({menengahPct}%)</strong></span>
                                     </div>
                                     <div className="donut-legend__item">
-                                        <span className="donut-legend__color" style={{ backgroundColor: '#dc2626' }}></span>
-                                        <span>Kurang Mampu: <strong>{stats.kurang_mampu} jiwa ({kurangMampuPct}%)</strong></span>
+                                        <span className="donut-legend__color" style={{ backgroundColor: '#D97706' }}></span>
+                                        <span>Kurang Mampu: <strong>{stats.kurang_mampu} ({kurangMampuPct}%)</strong></span>
                                     </div>
                                 </div>
                             </div>
@@ -1002,46 +913,28 @@ export default function PortalData({ token, tenantId, currentUser, ztEnabled, on
                         {/* Metrik Kelengkapan dan Partisipasi */}
                         <div className="donut-card">
                             <div className="donut-card__header">
-                                <span>Indikator Validitas & Kelengkapan Data</span>
-                                <span style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 500 }}>
-                                    Standardisasi SIAK & Dukcapil
-                                </span>
+                                <span>Integritas & Kelengkapan Data</span>
                             </div>
 
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: '6px 0' }}>
-                                <div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, marginBottom: 4 }}>
-                                        <span>Validitas Format NIK 16 Digit:</span>
-                                        <strong style={{ color: '#16a34a' }}>100% Terverifikasi</strong>
-                                    </div>
-                                    <div className="kpi-card__progress-bar">
-                                        <div className="kpi-card__progress-fill" style={{ width: '100%', backgroundColor: '#16a34a' }}></div>
-                                    </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: '8px 0' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #F3F4F6', paddingBottom: 10 }}>
+                                    <span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>Format NIK 16 Digit:</span>
+                                    <span style={{ fontWeight: 600, color: '#005F5F', fontSize: 13 }}>100% Terverifikasi</span>
                                 </div>
 
-                                <div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, marginBottom: 4 }}>
-                                        <span>Kelengkapan Titik Alamat Lapangan:</span>
-                                        <strong style={{ color: '#2563eb' }}>100% Lengkap</strong>
-                                    </div>
-                                    <div className="kpi-card__progress-bar">
-                                        <div className="kpi-card__progress-fill" style={{ width: '100%', backgroundColor: '#2563eb' }}></div>
-                                    </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #F3F4F6', paddingBottom: 10 }}>
+                                    <span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>Kelengkapan Titik Alamat:</span>
+                                    <span style={{ fontWeight: 600, color: '#005F5F', fontSize: 13 }}>100% Lengkap</span>
                                 </div>
 
-                                <div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, marginBottom: 4 }}>
-                                        <span>Tingkat Keterisian Target Sensus:</span>
-                                        <strong style={{ color: '#ea580c' }}>{Math.min(100, Math.round((totalRecords / 15) * 100))}%</strong>
-                                    </div>
-                                    <div className="kpi-card__progress-bar">
-                                        <div className="kpi-card__progress-fill" style={{ width: `${Math.min(100, (totalRecords / 15) * 100)}%`, backgroundColor: '#ea580c' }}></div>
-                                    </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #F3F4F6', paddingBottom: 10 }}>
+                                    <span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>Keterisian Target Wilayah:</span>
+                                    <span style={{ fontWeight: 600, color: '#005F5F', fontSize: 13 }}>{Math.min(100, Math.round((totalRecords / 15) * 100))}%</span>
                                 </div>
 
-                                <div style={{ fontSize: 11.5, color: 'var(--color-text-muted)', marginTop: 4, lineHeight: 1.5, display: 'flex', alignItems: 'center', gap: 6 }}>
-                                    <ShieldCheckIcon size={14} color="var(--color-primary-light)" />
-                                    <span><strong>Catatan Integritas:</strong> Seluruh entitas terenkripsi dalam penyimpanan lokal SQLite dan diisolasi dengan tag tenant_id <code>{selectedKab}</code>.</span>
+                                <div style={{ fontSize: 12, color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: 6, paddingTop: 4 }}>
+                                    <ShieldCheckIcon size={14} color="#005F5F" />
+                                    <span>Penyimpanan terisolasi pada wilayah <code>{selectedKab}</code></span>
                                 </div>
                             </div>
                         </div>

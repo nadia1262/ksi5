@@ -24,6 +24,7 @@ import {
     LogoutIcon
 } from './components/Icons';
 import './App.css';
+import sweepyLogo from './assets/Logo_Sweepy.png';
 
 const BACKEND_URL = 'http://localhost:3001';
 const KEYCLOAK_URL = 'http://localhost:8080';
@@ -221,13 +222,13 @@ export default function App() {
             <div className="login-page">
                 <div className="login-card">
                     <div className="login-card__header">
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 8 }}>
-                            <div className="sidebar-brand__logo" style={{ width: 44, height: 44, fontSize: 22 }}>
-                                S
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginBottom: 12 }}>
+                            <div style={{ width: 46, height: 46, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <img src={sweepyLogo} alt="Sweepy Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 3px 6px rgba(0, 95, 95, 0.2))' }} />
                             </div>
-                            <h1 style={{ margin: 0 }}>SIDAPTOR</h1>
+                            <h1 style={{ margin: 0, fontWeight: 700, letterSpacing: '-0.02em', fontSize: 26 }}>Sweepy</h1>
                         </div>
-                        <p>Sistem Data Penduduk Terintegrasi — BPS Zero Trust Gateway</p>
+                        <p>Zero Trust Data Gateway & Governance Platform</p>
                     </div>
                     <div className="login-card__body">
                         {loginError && (
@@ -278,7 +279,7 @@ export default function App() {
     }
 
     // ============================================
-    // MAIN APP LAYOUT (SIMPUL JABAR Redesign)
+    // MAIN APP LAYOUT
     // ============================================
     return (
         <div className="app-layout">
@@ -286,11 +287,13 @@ export default function App() {
             <aside className={`app-sidebar ${sidebarCollapsed ? 'app-sidebar--collapsed' : ''}`}>
                 {/* Brand */}
                 <div className="sidebar-brand">
-                    <div className="sidebar-brand__logo">S</div>
+                    <div className="sidebar-brand__logo">
+                        <img src={sweepyLogo} alt="Sweepy Logo" />
+                    </div>
                     {!sidebarCollapsed && (
                         <div className="sidebar-brand__text">
-                            <div className="sidebar-brand__title">SIDAPTOR</div>
-                            <div className="sidebar-brand__subtitle">MONITORING BPS</div>
+                            <div className="sidebar-brand__title">Sweepy</div>
+                            <div className="sidebar-brand__subtitle">ZERO TRUST GATEWAY</div>
                         </div>
                     )}
                 </div>
@@ -298,20 +301,18 @@ export default function App() {
                 {/* Sidebar Navigation Menu */}
                 <div className="sidebar-menu">
                     <div className="sidebar-section-title">
-                        {!sidebarCollapsed && 'MONITORING'}
+                        {!sidebarCollapsed && 'Navigasi'}
                     </div>
 
                     {/* Menu Item 1: Pendataan Penduduk (Portal Data) */}
                     <button
                         className={`sidebar-item ${activeTab === 'portal' ? 'sidebar-item--active' : ''}`}
                         onClick={() => setActiveTab('portal')}
-                        title="Pendataan Penduduk"
+                        title="Portal Data Kependudukan"
                     >
-                        <span className="sidebar-item__icon"><BuildingIcon size={17} /></span>
+                        <span className="sidebar-item__icon"><BuildingIcon size={18} /></span>
                         {!sidebarCollapsed && (
-                            <>
-                                <span className="sidebar-item__text">Pendataan Penduduk</span>
-                            </>
+                            <span className="sidebar-item__text">Portal Data</span>
                         )}
                     </button>
 
@@ -321,12 +322,9 @@ export default function App() {
                         onClick={() => setActiveTab('simulator')}
                         title="Simulator Keamanan API"
                     >
-                        <span className="sidebar-item__icon"><ShieldIcon size={17} /></span>
+                        <span className="sidebar-item__icon"><ShieldIcon size={18} /></span>
                         {!sidebarCollapsed && (
-                            <>
-                                <span className="sidebar-item__text">Simulator Keamanan</span>
-                                <span className="sidebar-item__badge">API</span>
-                            </>
+                            <span className="sidebar-item__text">Simulator API</span>
                         )}
                     </button>
 
@@ -336,68 +334,22 @@ export default function App() {
                         onClick={() => setActiveTab('monitoring')}
                         title="Dashboard Monitoring SOC"
                     >
-                        <span className="sidebar-item__icon"><RadioTowerIcon size={17} /></span>
+                        <span className="sidebar-item__icon"><RadioTowerIcon size={18} /></span>
                         {!sidebarCollapsed && (
-                            <>
-                                <span className="sidebar-item__text">Monitoring & SOC</span>
-                                <span className="sidebar-item__badge" style={{ backgroundColor: ztEnabled ? '#15803d' : '#b91c1c' }}>
-                                    {ztEnabled ? 'ZT: ON' : 'ZT: OFF'}
-                                </span>
-                            </>
+                            <span className="sidebar-item__text">Monitoring SOC</span>
                         )}
                     </button>
-
-                    {/* Enterprise BPS Menu Items (Authentic SIMPUL JABAR Reference Items) */}
-                    {!sidebarCollapsed && (
-                        <>
-                            <div className="sidebar-section-title">ANALISIS & REKAP</div>
-                            <button className="sidebar-item" onClick={() => setActiveTab('portal')} title="Analisis Sosek Kependudukan">
-                                <span className="sidebar-item__icon"><BarChartIcon size={17} /></span>
-                                <span className="sidebar-item__text">SE UMKM dan Sosek</span>
-                            </button>
-                            <button className="sidebar-item" onClick={() => setActiveTab('portal')} title="Peta Sebaran Pendataan">
-                                <span className="sidebar-item__icon"><MapIcon size={17} /></span>
-                                <span className="sidebar-item__text">Peta Pendataan</span>
-                            </button>
-                            <button className="sidebar-item" onClick={() => setActiveTab('portal')} title="Monitoring Kecepatan Petugas">
-                                <span className="sidebar-item__icon"><ClockIcon size={17} /></span>
-                                <span className="sidebar-item__text">Monitoring Pace Mikro</span>
-                            </button>
-                            <button className="sidebar-item" onClick={() => setActiveTab('portal')} title="Evaluasi Capaian Wilayah">
-                                <span className="sidebar-item__icon"><TrendingUpIcon size={17} /></span>
-                                <span className="sidebar-item__text">Kontrak Kinerja SE</span>
-                            </button>
-
-                            <div className="sidebar-section-title">AUDIT KEAMANAN</div>
-                            <button className="sidebar-item" onClick={() => setActiveTab('monitoring')} title="Deteksi Anomali BOLA">
-                                <span className="sidebar-item__icon"><AlertTriangleIcon size={17} /></span>
-                                <span className="sidebar-item__text">Anomali Akses BOLA</span>
-                            </button>
-                            <button className="sidebar-item" onClick={() => setActiveTab('monitoring')} title="Log Kepatuhan OPA Zero Trust">
-                                <span className="sidebar-item__icon"><ScaleIcon size={17} /></span>
-                                <span className="sidebar-item__text">Audit OPA Rego</span>
-                            </button>
-                        </>
-                    )}
                 </div>
 
                 {/* Sidebar Footer */}
                 <div className="sidebar-footer">
                     {!sidebarCollapsed ? (
-                        <>
-                            <div className="sidebar-footer__tenant">
-                                <span>Yurisdiksi Operator:</span>
-                                <span className="sidebar-footer__badge">{currentUser.tenant}</span>
-                            </div>
-                            <div className="sidebar-footer__tenant" style={{ fontSize: 10.5 }}>
-                                <span>Zero Trust Policy:</span>
-                                <span style={{ color: ztEnabled ? '#4ade80' : '#f87171', fontWeight: 600 }}>
-                                    {ztEnabled ? '● AKTIF (OPA)' : '○ NONAKTIF'}
-                                </span>
-                            </div>
-                        </>
+                        <div className="sidebar-footer__tenant">
+                            <span>Wilayah Operator</span>
+                            <span className="sidebar-footer__badge">{currentUser.tenant}</span>
+                        </div>
                     ) : (
-                        <div style={{ textAlign: 'center', color: '#38bdf8', fontSize: 12, fontWeight: 700 }}>
+                        <div style={{ textAlign: 'center', color: '#ffffff', fontSize: 12, fontWeight: 600 }}>
                             {currentUser.tenant}
                         </div>
                     )}
@@ -417,7 +369,9 @@ export default function App() {
                             <MenuIcon size={18} />
                         </button>
                         <div className="top-header__system-title">
-                            <span>Sistem Monitoring Progress Pendataan Lapangan & Keamanan Terintegrasi</span>
+                            <span style={{ fontWeight: 700, color: '#005F5F' }}>Sweepy</span>
+                            <span style={{ color: 'var(--color-border)', margin: '0 4px' }}>|</span>
+                            <span style={{ color: 'var(--color-text-secondary)', fontWeight: 500, fontSize: 13.5 }}>Data Gateway</span>
                         </div>
                     </div>
 
@@ -426,13 +380,14 @@ export default function App() {
                         <button
                             className="btn-pill btn-pill--outline"
                             onClick={handleToggleZt}
-                            title="Klik untuk Toggle Zero Trust secara instan"
+                            title="Klik untuk Toggle Zero Trust"
                             style={{
-                                borderColor: ztEnabled ? '#bbf7d0' : '#fecaca',
-                                backgroundColor: ztEnabled ? '#f0fdf4' : '#fef2f2',
-                                color: ztEnabled ? '#15803d' : '#b91c1c',
-                                padding: '4px 12px',
-                                fontSize: 11.5,
+                                borderColor: ztEnabled ? '#A7F3D0' : '#FECACA',
+                                backgroundColor: ztEnabled ? '#ECFDF5' : '#FEF2F2',
+                                color: ztEnabled ? '#065F46' : '#991B1B',
+                                padding: '5px 12px',
+                                fontSize: 12,
+                                fontWeight: 500,
                             }}
                         >
                             <span className={`status-dot ${ztEnabled ? 'status-dot--green' : 'status-dot--red'}`} />
@@ -443,16 +398,13 @@ export default function App() {
                         <div className="operator-badge">
                             <span className="operator-badge__dot" />
                             <span>{currentUser.label}</span>
-                        </div>
-
-                        {/* Tenant Badge */}
-                        <div className="tenant-pill">
-                            Wilayah: <strong>{currentUser.tenant}</strong>
+                            <span style={{ opacity: 0.5, margin: '0 2px' }}>•</span>
+                            <span style={{ fontFamily: 'JetBrains Mono', fontSize: 11.5 }}>{currentUser.tenant}</span>
                         </div>
 
                         {/* Logout Button */}
                         <button className="logout-btn" onClick={handleLogout} title="Keluar dari sesi">
-                            <LogoutIcon size={14} /> Logout
+                            <LogoutIcon size={14} /> Keluar
                         </button>
                     </div>
                 </header>
@@ -497,23 +449,23 @@ export default function App() {
                 <footer className="status-bar">
                     <div className="status-bar__item">
                         <span className={`status-dot ${connected ? 'status-dot--green' : 'status-dot--red'}`} />
-                        Server: {connected ? 'Terhubung (Port 3001)' : 'Terputus'}
+                        Backend: {connected ? 'Online' : 'Offline'}
                     </div>
                     <div className="status-bar__item">
                         <span className={`status-dot ${ztEnabled ? 'status-dot--green' : 'status-dot--red'}`} />
-                        Zero Trust Mode: {ztEnabled ? 'Strict Enforcement (OPA)' : 'Bypass / Insecure Mode'}
+                        Zero Trust: {ztEnabled ? 'Active (OPA)' : 'Bypass'}
                     </div>
                     <div className="status-bar__item">
                         <span className={`status-dot ${connected ? 'status-dot--green' : 'status-dot--yellow'}`} />
-                        OPA Engine: {connected ? 'Terhubung (Port 8181)' : 'Standby'}
+                        OPA Engine: {connected ? 'Online' : 'Standby'}
                     </div>
                     <div className="status-bar__item">
                         <span className={`status-dot ${connected ? 'status-dot--green' : 'status-dot--yellow'}`} />
-                        Redis Store: {connected ? 'Aktif' : 'Standby'}
+                        Redis Cache: {connected ? 'Online' : 'Standby'}
                     </div>
                     <div style={{ flex: 1 }} />
                     <div className="status-bar__item" style={{ color: 'var(--color-text-secondary)', fontWeight: 600 }}>
-                        Hak Akses Aktif: {currentUser.regionName} ({currentUser.tenant})
+                        Wilayah: {currentUser.regionName} ({currentUser.tenant})
                     </div>
                 </footer>
             </div>

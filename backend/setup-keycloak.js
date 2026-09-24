@@ -144,10 +144,36 @@ async function main() {
         }
     }
 
+    // --- STEP 4.5: Daftarkan Atribut tenant_id di User Profile (Keycloak 24+) ---
+    try {
+        const profileRes = await fetch(`${KEYCLOAK_URL}/admin/realms/${REALM_NAME}/users/profile`, { headers });
+        if (profileRes.ok) {
+            const profile = await profileRes.json();
+            if (!profile.attributes.some(a => a.name === 'tenant_id')) {
+                profile.attributes.push({
+                    name: 'tenant_id',
+                    displayName: 'Tenant ID',
+                    permissions: { view: ['admin', 'user'], edit: ['admin'] },
+                    multivalued: false,
+                });
+                const updateRes = await fetch(`${KEYCLOAK_URL}/admin/realms/${REALM_NAME}/users/profile`, {
+                    method: 'PUT',
+                    headers,
+                    body: JSON.stringify(profile),
+                });
+                if (updateRes.ok) {
+                    console.log('   ✅ Atribut tenant_id terdaftar di User Profile schema.\n');
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('   ⚠️  Gagal mengecek User Profile schema:', e.message);
+    }
+
     // --- STEP 5: Buat Users ---
     console.log('[5/6] Membuat Users...');
     for (const user of USERS) {
-        console.log(`   📝 Membuat user: ${user.username} (Tenant: ${user.tenant_id})...`);
+        console.log(`   📝 Membuat/memperbarui user: ${user.username} (Tenant: ${user.tenant_id})...`);
 
         const userRes = await fetch(`${KEYCLOAK_URL}/admin/realms/${REALM_NAME}/users`, {
             method: 'POST',
@@ -169,7 +195,24 @@ async function main() {
         });
 
         if (userRes.status === 409) {
-            console.log(`      ⚠️  User "${user.username}" sudah ada, skip.`);
+            console.log(`      ⚠️  User "${user.username}" sudah ada, memastikan atribut tenant_id...`);
+            // Update attributes if already exists
+            const getU = await fetch(`${KEYCLOAK_URL}/admin/realms/${REALM_NAME}/users?username=${user.username}`, { headers });
+            const listU = await getU.json();
+            if (listU && listU[0]) {
+                const uId = listU[0].id;
+                await fetch(`${KEYCLOAK_URL}/admin/realms/${REALM_NAME}/users/${uId}`, {
+                    method: 'PUT',
+                    headers,
+                    body: JSON.stringify({
+                        ...listU[0],
+                        attributes: {
+                            ...(listU[0].attributes || {}),
+                            tenant_id: [user.tenant_id],
+                        },
+                    }),
+                });
+            }
         } else if (userRes.ok) {
             console.log(`      ✅ User "${user.username}" berhasil dibuat.`);
         } else {
@@ -178,33 +221,29 @@ async function main() {
         }
     }
 
-    // --- STEP 6: Verifikasi ---
-    console.log('\n[6/6] Verifikasi: Mencoba login sebagai operator-jaksel...');
+    // --- STEP 6: Verifikasi Semua User ---
+    console.log('\n[6/6] Verifikasi: Mencoba login semua operator...');
 
-    const testLoginRes = await fetch(`${KEYCLOAK_URL}/realms/${REALM_NAME}/protocol/openid-connect/token`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-            grant_type: 'password',
-            client_id: CLIENT_ID,
-            username: 'operator-jaksel',
-            password: 'password',
-        }),
-    });
+    for (const user of USERS) {
+        const testLoginRes = await fetch(`${KEYCLOAK_URL}/realms/${REALM_NAME}/protocol/openid-connect/token`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                grant_type: 'password',
+                client_id: CLIENT_ID,
+                username: user.username,
+                password: user.password,
+            }),
+        });
 
-    if (testLoginRes.ok) {
-        const tokenData = await testLoginRes.json();
-        // Decode JWT payload
-        const payload = JSON.parse(atob(tokenData.access_token.split('.')[1]));
-        console.log('   ✅ Login berhasil!');
-        console.log('   📋 JWT Payload (sample):');
-        console.log(`      - sub (user_id): ${payload.sub}`);
-        console.log(`      - tenant_id   : ${payload.tenant_id}`);
-        console.log(`      - preferred_username: ${payload.preferred_username}`);
-        console.log(`      - iss (issuer): ${payload.iss}`);
-    } else {
-        const err = await testLoginRes.text();
-        console.error('   ❌ Login gagal:', err);
+        if (testLoginRes.ok) {
+            const tokenData = await testLoginRes.json();
+            const payload = JSON.parse(atob(tokenData.access_token.split('.')[1]));
+            console.log(`   ✅ Login ${user.username} berhasil! tenant_id: ${payload.tenant_id}`);
+        } else {
+            const err = await testLoginRes.text();
+            console.error(`   ❌ Login ${user.username} gagal:`, err);
+        }
     }
 
     console.log('\n============================================');

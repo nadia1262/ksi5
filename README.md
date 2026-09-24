@@ -1,4 +1,4 @@
-# SIDAPTOR — Sistem Data Penduduk Terintegrasi
+# Sweepy — Zero Trust Data Gateway & Governance Platform
 
 Proyek akhir Keamanan Sistem Informasi: Mitigasi **BOLA (Broken Object Level Authorization)** menggunakan arsitektur **Zero Trust** dengan **OPA**, **Keycloak**, dan **Redis**.
 
@@ -46,6 +46,11 @@ Harus ada 5 container running: `zt_keycloak`, `zt_opa`, `zt_redis`, `zt_loki`, `
 
 ```bash
 cd backend
+# Windows:
+copy .env.example .env
+# Linux / macOS:
+cp .env.example .env
+
 npm install
 
 cd ../frontend
@@ -176,7 +181,7 @@ Express API Gateway (server.js)
 | Masalah | Solusi |
 |---------|--------|
 | Login gagal "connect ECONNREFUSED" | Keycloak belum ready. Tunggu 30 detik, coba lagi. |
-| `setup-keycloak.js` gagal | Pastikan Docker running dan `docker ps` menunjukkan 3 container. |
+| `setup-keycloak.js` gagal | Pastikan Docker running dan `docker ps` menunjukkan 5 container (`zt_keycloak`, `zt_opa`, `zt_redis`, `zt_loki`, `zt_grafana`). |
 | Data kosong setelah pilih wilayah | Klik tombol **Terapkan** setelah memilih provinsi dan kab/kota. |
 | Port 3001 sudah dipakai | Kill proses lama: `npx kill-port 3001` |
 | Port 5173 sudah dipakai | Kill proses lama: `npx kill-port 5173` |

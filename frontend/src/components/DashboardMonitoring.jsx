@@ -114,7 +114,7 @@ export default function DashboardMonitoring({ ztEnabled, onToggleZt, logs, onCle
 
     // Risk gauge SVG
     const gaugeAngle = (latestScore / 100) * 180;
-    const gaugeColor = latestScore < 30 ? '#0F7B3F' : latestScore < 50 ? '#E65100' : '#C62828';
+    const gaugeColor = latestScore < 30 ? '#059669' : latestScore < 50 ? '#D97706' : '#DC2626';
 
     return (
         <div className="content--full">
@@ -205,19 +205,19 @@ export default function DashboardMonitoring({ ztEnabled, onToggleZt, logs, onCle
                     <div style={{ padding: '12px 0' }}>
                         <div className="stats-row">
                             <span className="stats-row__label">Diizinkan</span>
-                            <span className="stats-row__value" style={{ color: '#0F7B3F', fontSize: 20 }}>
+                            <span className="stats-row__value" style={{ color: '#059669', fontSize: 20 }}>
                                 {allowed}
                             </span>
                         </div>
                         <div className="stats-row">
                             <span className="stats-row__label">Diblokir</span>
-                            <span className="stats-row__value" style={{ color: '#C62828', fontSize: 20 }}>
+                            <span className="stats-row__value" style={{ color: '#DC2626', fontSize: 20 }}>
                                 {blocked}
                             </span>
                         </div>
                         <div className="stats-row">
                             <span className="stats-row__label">Daftar Hitam JWT</span>
-                            <span className="stats-row__value" style={{ color: '#E65100', fontSize: 20 }}>
+                            <span className="stats-row__value" style={{ color: '#D97706', fontSize: 20 }}>
                                 {blacklisted}
                             </span>
                         </div>
