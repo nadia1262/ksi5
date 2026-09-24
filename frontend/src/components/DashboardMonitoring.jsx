@@ -5,6 +5,95 @@
 // ZT toggle, risk gauge, statistik, dan real-time security logs
 
 import { useState, useEffect, useRef } from 'react';
+import { BarChartIcon, ShieldCheckIcon, ExternalLinkIcon } from './Icons';
+
+// Helper formatting alasan evaluasi yang deskriptif dan mudah dipahami
+function formatReason(log) {
+    const rawReason = log.reason || '';
+    const action = log.action;
+    const score = log.riskScore ?? 0;
+
+    if (action === 'BLOCKED') {
+        if (rawReason.includes('Hard Violation') || rawReason.includes('BOLA')) {
+            return (
+                <span style={{ color: '#b91c1c', fontWeight: 600 }}>
+                    Pelanggaran Keras: BOLA Terdeteksi (Akses Lintas Wilayah Ditolak)
+                </span>
+            );
+        }
+        if (rawReason.includes('Soft Violation') || rawReason.includes('Threshold')) {
+            return (
+                <span style={{ color: '#b91c1c', fontWeight: 600 }}>
+                    Pelanggaran Kontekstual: Ambang Batas Risiko Terlampaui (≥50)
+                </span>
+            );
+        }
+        if (rawReason.includes('Blacklist')) {
+            return (
+                <span style={{ color: '#b91c1c', fontWeight: 600 }}>
+                    Token Di-Blacklist (Pelanggaran BOLA Sebelumnya)
+                </span>
+            );
+        }
+        if (rawReason.includes('Authorization') || rawReason.includes('Token')) {
+            return (
+                <span style={{ color: '#b91c1c', fontWeight: 600 }}>
+                    Kredensial Tidak Valid / Token Tidak Ditemukan
+                </span>
+            );
+        }
+        if (rawReason.includes('Policy Engine Unreachable')) {
+            return (
+                <span style={{ color: '#b91c1c', fontWeight: 600 }}>
+                    OPA Policy Engine Tidak Terhubung (Fail-Closed)
+                </span>
+            );
+        }
+        return <span style={{ color: '#b91c1c', fontWeight: 600 }}>{rawReason}</span>;
+    }
+
+    // Jika ALLOWED / DIIZINKAN
+    if (rawReason.includes('Zero Trust Disabled') || rawReason.includes('Bypass')) {
+        return <span style={{ color: '#64748b' }}>Bypass (Zero Trust Dinonaktifkan)</span>;
+    }
+    if (score === 0 || rawReason === 'None' || rawReason.includes('Normal Context')) {
+        return (
+            <span style={{ color: '#047857', fontWeight: 500 }}>
+                Akses Sah (Identitas & Konteks Normal Terverifikasi)
+            </span>
+        );
+    }
+    return (
+        <span style={{ color: '#b45309', fontWeight: 500 }}>
+            Diizinkan: Anomali Kontekstual Rendah di Bawah Batas Toleransi (&lt;50)
+        </span>
+    );
+}
+
+// Helper rendering badge konteks dengan indikator warna dan bobot poin
+function renderContextTags(log) {
+    if (!log.contextFlags || log.contextFlags.length === 0) {
+        return (
+            <div className="context-tags">
+                <span className="context-tag context-tag--success">Konteks Normal (Aman)</span>
+            </div>
+        );
+    }
+
+    return (
+        <div className="context-tags">
+            {log.contextFlags.map((flag, j) => {
+                const label = typeof flag === 'object' ? flag.label : flag;
+                const type = typeof flag === 'object' ? flag.type : 'info';
+                return (
+                    <span key={j} className={`context-tag context-tag--${type}`}>
+                        {label}
+                    </span>
+                );
+            })}
+        </div>
+    );
+}
 
 export default function DashboardMonitoring({ ztEnabled, onToggleZt, logs, onClearLogs, stats }) {
     const logEndRef = useRef(null);
@@ -164,17 +253,20 @@ export default function DashboardMonitoring({ ztEnabled, onToggleZt, logs, onCle
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="btn btn--secondary btn--sm"
-                                style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                                style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}
                                 title="Buka Grafana Monitoring Dashboard"
                             >
-                                📊 Grafana
+                                <BarChartIcon size={14} /> Grafana
+                                <ExternalLinkIcon size={12} color="var(--color-text-muted)" />
                             </a>
                         </div>
                     </div>
 
                     {logs.length === 0 ? (
                         <div className="empty-state">
-                            <div className="empty-state__icon">&#9737;</div>
+                            <div className="empty-state__icon">
+                                <ShieldCheckIcon size={42} color="var(--color-text-light)" />
+                            </div>
                             <div className="empty-state__title">Belum ada log</div>
                             <div className="empty-state__desc">
                                 Log akan muncul secara real-time saat ada permintaan ke API.
@@ -186,14 +278,14 @@ export default function DashboardMonitoring({ ztEnabled, onToggleZt, logs, onCle
                                 <thead>
                                     <tr>
                                         <th style={{ width: 80 }}>Waktu</th>
-                                        <th style={{ width: 120 }}>Alamat IP</th>
-                                        <th style={{ width: 70 }}>Asal</th>
-                                        <th style={{ width: 70 }}>Target</th>
+                                        <th style={{ width: 110 }}>Alamat IP</th>
+                                        <th style={{ width: 65 }}>Asal</th>
+                                        <th style={{ width: 65 }}>Target</th>
                                         <th>Endpoint</th>
-                                        <th style={{ width: 90 }}>Tindakan</th>
-                                        <th style={{ width: 50 }}>Skor</th>
-                                        <th>Alasan</th>
-                                        <th style={{ width: 120 }}>Konteks</th>
+                                        <th style={{ width: 95 }}>Tindakan</th>
+                                        <th style={{ width: 55 }}>Skor</th>
+                                        <th style={{ minWidth: 240 }}>Alasan Evaluasi</th>
+                                        <th style={{ minWidth: 160 }}>Konteks Keamanan</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -203,7 +295,7 @@ export default function DashboardMonitoring({ ztEnabled, onToggleZt, logs, onCle
                                             <td className="text-mono text-sm">{log.ip}</td>
                                             <td className="text-mono text-sm">{log.tenantJwt || '-'}</td>
                                             <td className="text-mono text-sm">{log.tenantTarget || '-'}</td>
-                                            <td className="text-mono text-sm" style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                            <td className="text-mono text-sm" style={{ maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                                 {log.endpoint}
                                             </td>
                                             <td>
@@ -217,14 +309,10 @@ export default function DashboardMonitoring({ ztEnabled, onToggleZt, logs, onCle
                                                 {log.riskScore}
                                             </td>
                                             <td className="text-sm">
-                                                {log.reason || '-'}
+                                                {formatReason(log)}
                                             </td>
                                             <td>
-                                                <div className="context-tags">
-                                                    {log.contextFlags?.map((flag, j) => (
-                                                        <span key={j} className="context-tag">{flag}</span>
-                                                    ))}
-                                                </div>
+                                                {renderContextTags(log)}
                                             </td>
                                         </tr>
                                     ))}

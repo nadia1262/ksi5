@@ -5,16 +5,13 @@
 // untuk menguji Zero Trust middleware (hard + soft violation)
 
 import { useState } from 'react';
+import { ArrowRightLeftIcon, ShieldAlertIcon, ShieldCheckIcon } from './Icons';
 
 const API = 'http://localhost:3001/api';
 
 const IP_OPTIONS = [
-    { value: '', label: '-- Default (IP asli) --' },
-    { value: 'random', label: 'Random IP (Selalu Baru)' },
-    { value: '192.168.1.10', label: '192.168.1.10 — IP Kantor (Terdaftar)' },
-    { value: '110.50.23.99', label: '110.50.23.99 — IP Asing (Statis)' },
-    { value: '203.176.80.11', label: '203.176.80.11 — IP Publik Lain' },
-    { value: '10.0.0.1', label: '10.0.0.1 — IP VPN Internal' },
+    { value: '', label: 'IP Default (IP Asli)' },
+    { value: 'random', label: 'IP Random (IP Baru)' },
 ];
 
 const TIME_OPTIONS = [
@@ -49,11 +46,11 @@ export default function SimulatorKeamanan({ token, tenantId, users, onSelectUser
         const startTime = performance.now();
         try {
             const headers = { Authorization: `Bearer ${token}` };
-            let finalIp = simIp;
+            let finalIp = '';
             if (simIp === 'random') {
-                finalIp = `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+                finalIp = `110.50.${Math.floor(Math.random() * 200) + 1}.${Math.floor(Math.random() * 250) + 1}`;
+                headers['X-Simulated-IP'] = finalIp;
             }
-            if (finalIp) headers['X-Simulated-IP'] = finalIp;
             if (simTime) headers['X-Simulated-Time'] = simTime;
 
             const url = `http://localhost:3001${targetEndpoint}`;
@@ -61,13 +58,19 @@ export default function SimulatorKeamanan({ token, tenantId, users, onSelectUser
             const latency = Math.round(performance.now() - startTime);
             const data = await res.json();
 
+            // Ekstrak skor risiko dari header jika belum ada di data json
+            const headerScore = res.headers.get('x-risk-score');
+            if (data && typeof data === 'object' && data.risk_score === undefined && headerScore !== null) {
+                data.risk_score = parseInt(headerScore, 10);
+            }
+
             setResponse({
                 status: res.status,
                 statusText: res.statusText,
                 latency,
                 data,
                 headers: {
-                    ip: finalIp || '(IP asli)',
+                    ip: finalIp || '(IP Default)',
                     time: simTime || new Date().toLocaleTimeString('id-ID'),
                 },
                 timestamp: new Date().toLocaleTimeString('id-ID'),
@@ -91,16 +94,18 @@ export default function SimulatorKeamanan({ token, tenantId, users, onSelectUser
         setResponse(null);
 
         const startTime = performance.now();
-        let lastRes, lastData, finalIp;
+        let lastRes, lastData;
+
+        // Jika IP Random, buat satu IP baru untuk keseluruhan paket serangan burst ini
+        let finalIp = '';
+        if (simIp === 'random') {
+            finalIp = `110.50.${Math.floor(Math.random() * 200) + 1}.${Math.floor(Math.random() * 250) + 1}`;
+        }
 
         try {
             // Jalankan 15 request berturut-turut untuk trigger high-velocity (limit: >10 per 60s)
             for (let i = 0; i < 15; i++) {
                 const headers = { Authorization: `Bearer ${token}` };
-                finalIp = simIp;
-                if (simIp === 'random') {
-                    finalIp = `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
-                }
                 if (finalIp) headers['X-Simulated-IP'] = finalIp;
                 if (simTime) headers['X-Simulated-Time'] = simTime;
 
@@ -110,6 +115,10 @@ export default function SimulatorKeamanan({ token, tenantId, users, onSelectUser
             }
 
             const latency = Math.round(performance.now() - startTime);
+            const headerScore = lastRes?.headers.get('x-risk-score');
+            if (lastData && typeof lastData === 'object' && lastData.risk_score === undefined && headerScore !== null) {
+                lastData.risk_score = parseInt(headerScore, 10);
+            }
 
             setResponse({
                 status: lastRes.status,
@@ -117,7 +126,7 @@ export default function SimulatorKeamanan({ token, tenantId, users, onSelectUser
                 latency,
                 data: lastData,
                 headers: {
-                    ip: finalIp || '(IP asli)',
+                    ip: finalIp || '(IP Default)',
                     time: simTime || new Date().toLocaleTimeString('id-ID'),
                 },
                 timestamp: new Date().toLocaleTimeString('id-ID'),
@@ -137,17 +146,9 @@ export default function SimulatorKeamanan({ token, tenantId, users, onSelectUser
     // Handle user switch
     const handleUserChange = (username) => {
         setSelectedUser(username);
+        setResponse(null);
         if (onSelectUser) {
             onSelectUser(username);
-            setResponse({
-                status: 200,
-                statusText: 'USER SWITCHED',
-                latency: 0,
-                data: { message: `Berhasil berganti ke operator: ${username}. Token JWT diperbarui secara sinkron dengan Keycloak.` },
-                timestamp: new Date().toLocaleTimeString('id-ID'),
-            });
-        } else {
-            setResponse(null);
         }
     };
 
@@ -247,12 +248,13 @@ export default function SimulatorKeamanan({ token, tenantId, users, onSelectUser
                             {loading ? 'Mengirim...' : 'Kirim Normal'}
                         </button>
                         <button
-                            className="btn btn--danger"
-                            style={{ flex: 1, backgroundColor: '#8B0000', borderColor: '#8B0000' }}
+                            className="btn btn--danger-fill"
+                            style={{ flex: 1 }}
                             onClick={handleIntruderAttack}
                             disabled={!token || loading}
                             title="Mengirim 15 request dalam hitungan detik untuk mentrigger 'Velocity Exceeded'"
                         >
+                            <ShieldAlertIcon size={15} />
                             {loading ? 'Menyerang...' : 'Serangan Intruder (15x)'}
                         </button>
                     </div>
@@ -264,7 +266,9 @@ export default function SimulatorKeamanan({ token, tenantId, users, onSelectUser
 
                     {!response ? (
                         <div className="empty-state">
-                            <div className="empty-state__icon">&#8644;</div>
+                            <div className="empty-state__icon">
+                                <ArrowRightLeftIcon size={40} color="var(--color-text-light)" />
+                            </div>
                             <div className="empty-state__title">Belum ada respons</div>
                             <div className="empty-state__desc">
                                 Konfigurasikan request di sebelah kiri dan klik Kirim Permintaan.
@@ -291,7 +295,9 @@ export default function SimulatorKeamanan({ token, tenantId, users, onSelectUser
                             )}
                             {response.status === 200 && (
                                 <div className="alert alert--success mb-12">
-                                    <strong>Keputusan OPA: IZINKAN</strong> — Permintaan dianggap aman.
+                                    <strong>Keputusan OPA: IZINKAN</strong> — {response.data?.risk_score > 0
+                                        ? `Diizinkan (Terdeteksi anomali kontekstual rendah: Skor ${response.data.risk_score}/50)`
+                                        : 'Permintaan dianggap aman (Konteks Normal).'}
                                 </div>
                             )}
 

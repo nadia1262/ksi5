@@ -283,6 +283,19 @@ function createZeroTrustMiddleware(redisClient, io) {
             // CEK 6: Eksekusi keputusan
             if (decision.allow) {
                 console.log(`[ZT] ✅ ALLOW | Tenant ${decoded.tenant_id} → ${resourceTenantId} | Score: ${decision.risk_score}`);
+
+                // Teruskan risk_score ke client via response header dan body json
+                res.setHeader('X-Risk-Score', String(decision.risk_score));
+                res.setHeader('Access-Control-Expose-Headers', 'X-Risk-Score');
+
+                const originalJson = res.json.bind(res);
+                res.json = (body) => {
+                    if (body && typeof body === 'object' && !Array.isArray(body) && body.risk_score === undefined) {
+                        body.risk_score = decision.risk_score;
+                    }
+                    return originalJson(body);
+                };
+
                 return next();
             } else {
                 console.log(`[ZT] ❌ DENY  | Tenant ${decoded.tenant_id} → ${resourceTenantId} | Score: ${decision.risk_score} | Reason: ${decision.block_reason}`);
