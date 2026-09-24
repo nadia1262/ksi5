@@ -4,8 +4,8 @@
 // Tab "Simulator Keamanan" — Konfigurasi request API manual
 // untuk menguji Zero Trust middleware (hard + soft violation)
 
-import { useState } from 'react';
-import { ArrowRightLeftIcon, ShieldAlertIcon, ShieldCheckIcon } from './Icons';
+import { useState, useEffect } from 'react';
+import { ArrowRightLeftIcon, ShieldAlertIcon, ShieldCheckIcon, LockIcon } from './Icons';
 
 const API = 'http://localhost:3001/api';
 
@@ -22,13 +22,40 @@ const TIME_OPTIONS = [
     { value: '22:00', label: '22:00 — Malam (di luar jam kerja)' },
 ];
 
-export default function SimulatorKeamanan({ token, tenantId, users, onSelectUser, onLogin }) {
-    const [targetEndpoint, setTargetEndpoint] = useState(`/api/wilayah/3174/penduduk`);
+export default function SimulatorKeamanan({ token, tenantId, currentUser, users = [] }) {
+    const [targetEndpoint, setTargetEndpoint] = useState(() => `/api/wilayah/${tenantId || '3174'}/penduduk`);
     const [simIp, setSimIp] = useState('');
     const [simTime, setSimTime] = useState('');
     const [response, setResponse] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [selectedUser, setSelectedUser] = useState('');
+
+    // Sinkronisasi target endpoint saat tenant terautentikasi berubah
+    useEffect(() => {
+        if (tenantId) {
+            setTargetEndpoint(`/api/wilayah/${tenantId}/penduduk`);
+        }
+    }, [tenantId]);
+
+    // Data operator aktif yang terautentikasi
+    const currentOperator = currentUser || users.find(u => u.tenant === tenantId) || {
+        label: `Operator Wilayah (${tenantId})`,
+        tenant: tenantId,
+    };
+
+    // Referensi kode tenant lain untuk skenario pengujian pelanggaran BOLA
+    const referenceTenants = [
+        ...users.filter(u => u.tenant !== tenantId).map(u => ({
+            tenant: u.tenant,
+            label: u.label,
+            name: u.regionName || u.label,
+        })),
+        ...(tenantId !== '3173' && !users.some(u => u.tenant === '3173')
+            ? [{ tenant: '3173', label: 'BPS Kota Adm. Jakarta Barat', name: 'Kota Adm. Jakarta Barat' }]
+            : []),
+        ...(tenantId !== '3273' && !users.some(u => u.tenant === '3273')
+            ? [{ tenant: '3273', label: 'BPS Kota Bandung', name: 'Kota Bandung' }]
+            : []),
+    ];
 
     // Deteksi cross-tenant
     const urlTenant = (() => {
@@ -143,15 +170,6 @@ export default function SimulatorKeamanan({ token, tenantId, users, onSelectUser
         setLoading(false);
     };
 
-    // Handle user switch
-    const handleUserChange = (username) => {
-        setSelectedUser(username);
-        setResponse(null);
-        if (onSelectUser) {
-            onSelectUser(username);
-        }
-    };
-
     // Truncate JWT untuk tampilan
     const truncatedToken = token
         ? token.substring(0, 60) + '...' + token.substring(token.length - 20)
@@ -170,21 +188,48 @@ export default function SimulatorKeamanan({ token, tenantId, users, onSelectUser
                 <div className="card">
                     <div className="card__header">Konfigurasi Request</div>
 
-                    {/* Identitas Operator */}
+                    {/* Identitas Operator (Default sesuai sesi yang terautentikasi) */}
                     <div className="form-group mb-12">
-                        <label className="form-label">Identitas Operator</label>
-                        <select
-                            className="form-select"
-                            value={selectedUser}
-                            onChange={e => handleUserChange(e.target.value)}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+                            <label className="form-label" style={{ margin: 0 }}>Identitas Operator</label>
+                            <span style={{ fontSize: 11, color: '#005F5F', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                <LockIcon size={12} /> Sesi Terautentikasi
+                            </span>
+                        </div>
+                        <div
+                            className="form-input"
+                            style={{
+                                backgroundColor: 'var(--color-bg)',
+                                color: 'var(--color-text-primary)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                cursor: 'default',
+                                borderColor: 'var(--color-border)',
+                                userSelect: 'none',
+                            }}
                         >
-                            <option value="">-- Pilih Operator --</option>
-                            {users.map(u => (
-                                <option key={u.username} value={u.username}>
-                                    {u.label} ({u.tenant})
-                                </option>
-                            ))}
-                        </select>
+                            <span style={{ fontWeight: 500 }}>
+                                {currentOperator.label}
+                            </span>
+                            <span
+                                style={{
+                                    fontFamily: 'JetBrains Mono, monospace',
+                                    fontSize: 12,
+                                    backgroundColor: 'var(--color-surface)',
+                                    border: '1px solid var(--color-border)',
+                                    padding: '2px 8px',
+                                    borderRadius: 4,
+                                    color: '#005F5F',
+                                    fontWeight: 600,
+                                }}
+                            >
+                                Tenant: {tenantId}
+                            </span>
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 4 }}>
+                            Identitas dibuat default sesuai login saat ini. Pengujian pelanggaran akses tenant lain dilakukan dengan mengedit kode tenant pada <strong>Target Endpoint</strong>.
+                        </div>
                     </div>
 
                     {/* JWT Token */}
@@ -200,13 +245,80 @@ export default function SimulatorKeamanan({ token, tenantId, users, onSelectUser
 
                     {/* Target Endpoint */}
                     <div className="form-group mb-12">
-                        <label className="form-label">Target Endpoint</label>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+                            <label className="form-label" style={{ margin: 0 }}>Target Endpoint</label>
+                            {targetEndpoint !== `/api/wilayah/${tenantId}/penduduk` && (
+                                <button
+                                    type="button"
+                                    onClick={() => setTargetEndpoint(`/api/wilayah/${tenantId}/penduduk`)}
+                                    style={{
+                                        background: 'none',
+                                        border: 'none',
+                                        color: '#005F5F',
+                                        fontSize: 11.5,
+                                        cursor: 'pointer',
+                                        fontWeight: 600,
+                                        textDecoration: 'underline',
+                                        padding: 0
+                                    }}
+                                    title="Kembalikan ke endpoint wilayah sendiri"
+                                >
+                                    ↺ Reset ke Wilayah Sendiri ({tenantId})
+                                </button>
+                            )}
+                        </div>
                         <input
                             className="form-input text-mono"
                             value={targetEndpoint}
                             onChange={e => setTargetEndpoint(e.target.value)}
                             placeholder="/api/wilayah/{kode}/penduduk"
                         />
+
+                        {/* Referensi Kode Tenant Lain untuk Uji Pelanggaran BOLA */}
+                        <div style={{ marginTop: 10, padding: '10px 12px', backgroundColor: 'var(--color-bg)', borderRadius: 8, border: '1px solid var(--color-border)' }}>
+                            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 6 }}>
+                                Referensi Kode Tenant Lain (Uji Pelanggaran BOLA):
+                            </div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                {referenceTenants.map(t => {
+                                    const isActive = urlTenant === t.tenant;
+                                    return (
+                                        <button
+                                            key={t.tenant}
+                                            type="button"
+                                            onClick={() => setTargetEndpoint(`/api/wilayah/${t.tenant}/penduduk`)}
+                                            style={{
+                                                cursor: 'pointer',
+                                                fontSize: 11.5,
+                                                padding: '4px 9px',
+                                                borderRadius: 6,
+                                                border: isActive ? '1px solid #FCA5A5' : '1px solid var(--color-border)',
+                                                backgroundColor: isActive ? '#FEF2F2' : 'var(--color-surface)',
+                                                color: isActive ? '#991B1B' : 'var(--color-text-primary)',
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: 5,
+                                                transition: 'all 0.15s ease'
+                                            }}
+                                            title={`Klik untuk mencoba akses wilayah ${t.name} (Kode: ${t.tenant})`}
+                                        >
+                                            <code style={{ fontWeight: 700, fontFamily: 'JetBrains Mono, monospace', fontSize: 11 }}>
+                                                {t.tenant}
+                                            </code>
+                                            <span>— {t.name}</span>
+                                            {isActive && (
+                                                <span style={{ fontSize: 10, backgroundColor: '#FEE2E2', padding: '1px 5px', borderRadius: 3, fontWeight: 700 }}>
+                                                    Aktif di URL
+                                                </span>
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                            <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 8, lineHeight: 1.4 }}>
+                                Ketik manual kode tenant di atas pada <strong>Target Endpoint</strong> (atau klik salah satu tombol referensi), lalu klik <strong>Kirim Normal</strong> untuk menguji respons blokir Zero Trust.
+                            </div>
+                        </div>
                     </div>
 
                     {/* Cross-tenant warning */}

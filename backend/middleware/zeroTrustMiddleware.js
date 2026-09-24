@@ -26,6 +26,10 @@ function dispatchLog(io, logEntry) {
     }
 }
 
+const KEYCLOAK_URL = process.env.KEYCLOAK_URL || 'http://localhost:8080';
+const KEYCLOAK_REALM = process.env.KEYCLOAK_REALM || 'zt-realm';
+const OPA_URL = process.env.OPA_URL || 'http://localhost:8181/v1/data/authz';
+
 // -------------------------------------------
 // A. JWT Verification (Keycloak)
 // -------------------------------------------
@@ -35,7 +39,7 @@ let jwksClient;
 function getJwksClient() {
     if (!jwksClient) {
         jwksClient = jwksRsa({
-            jwksUri: `${process.env.KEYCLOAK_URL}/realms/${process.env.KEYCLOAK_REALM}/protocol/openid-connect/certs`,
+            jwksUri: `${KEYCLOAK_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/certs`,
             cache: true,
             rateLimit: true,
         });
@@ -140,7 +144,7 @@ async function evaluatePolicy(jwtPayload, resourceTenantId, context) {
     };
 
     try {
-        const response = await axios.post(process.env.OPA_URL, opaInput, {
+        const response = await axios.post(OPA_URL, opaInput, {
             timeout: 2000, // Timeout 2 detik
         });
 
@@ -208,7 +212,7 @@ function createZeroTrustMiddleware(redisClient, io) {
             const decoded = await new Promise((resolve, reject) => {
                 jwt.verify(token, getSigningKey, {
                     algorithms: ['RS256'],
-                    issuer: `${process.env.KEYCLOAK_URL}/realms/${process.env.KEYCLOAK_REALM}`,
+                    issuer: `${KEYCLOAK_URL}/realms/${KEYCLOAK_REALM}`,
                 }, (err, decoded) => {
                     if (err) reject(err);
                     else resolve(decoded);

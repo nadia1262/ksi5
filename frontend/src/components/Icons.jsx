@@ -314,3 +314,4 @@ export function TrashIcon({ size = 14, className = '', color = 'currentColor', .
         </svg>
     );
 }
+

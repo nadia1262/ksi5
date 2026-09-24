@@ -37,21 +37,53 @@ const USERS = [
     { username: 'operator-bogor', password: 'password', tenant: '3201', label: 'BPS Kab. Bogor', regionName: 'Kab. Bogor' },
 ];
 
+// Helper untuk memulihkan sesi dari sessionStorage saat refresh
+function getInitialAuthState() {
+    try {
+        const savedToken = sessionStorage.getItem('zt_token');
+        const savedUser = sessionStorage.getItem('zt_user');
+        if (!savedToken || !savedUser) return { token: '', user: null };
+
+        // Validasi apakah token JWT sudah kadaluarsa (exp claim)
+        const parts = savedToken.split('.');
+        if (parts.length === 3) {
+            const payload = JSON.parse(atob(parts[1]));
+            if (payload.exp && payload.exp * 1000 < Date.now()) {
+                sessionStorage.removeItem('zt_token');
+                sessionStorage.removeItem('zt_user');
+                sessionStorage.removeItem('zt_active_tab');
+                return { token: '', user: null };
+            }
+        }
+        return { token: savedToken, user: JSON.parse(savedUser) };
+    } catch {
+        sessionStorage.removeItem('zt_token');
+        sessionStorage.removeItem('zt_user');
+        return { token: '', user: null };
+    }
+}
+
 export default function App() {
-    // ---- Auth State ----
-    const [token, setToken] = useState('');
-    const [currentUser, setCurrentUser] = useState(null);
+    // ---- Auth State (Persisted in sessionStorage) ----
+    const initialAuth = getInitialAuthState();
+    const [token, setToken] = useState(initialAuth.token);
+    const [currentUser, setCurrentUser] = useState(initialAuth.user);
     const [loginUser, setLoginUser] = useState('');
     const [loginLoading, setLoginLoading] = useState(false);
     const [loginError, setLoginError] = useState('');
 
     // ---- App State ----
-    const [activeTab, setActiveTab] = useState('portal');
+    const [activeTab, setActiveTab] = useState(() => sessionStorage.getItem('zt_active_tab') || 'portal');
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [ztEnabled, setZtEnabled] = useState(true);
     const [securityLogs, setSecurityLogs] = useState([]);
     const [serverStats, setServerStats] = useState({});
     const [connected, setConnected] = useState(false);
+
+    const handleTabChange = (tab) => {
+        setActiveTab(tab);
+        sessionStorage.setItem('zt_active_tab', tab);
+    };
 
     // ---- Socket ref ----
     const socketRef = useRef(null);
@@ -180,6 +212,8 @@ export default function App() {
             const data = await res.json();
             setToken(data.access_token);
             setCurrentUser(user);
+            sessionStorage.setItem('zt_token', data.access_token);
+            sessionStorage.setItem('zt_user', JSON.stringify(user));
             setLoginError('');
         } catch (err) {
             setLoginError(err.message);
@@ -199,6 +233,9 @@ export default function App() {
         setCurrentUser(null);
         setLoginUser('');
         setSecurityLogs([]);
+        sessionStorage.removeItem('zt_token');
+        sessionStorage.removeItem('zt_user');
+        sessionStorage.removeItem('zt_active_tab');
     };
 
     // ============================================
@@ -307,7 +344,7 @@ export default function App() {
                     {/* Menu Item 1: Pendataan Penduduk (Portal Data) */}
                     <button
                         className={`sidebar-item ${activeTab === 'portal' ? 'sidebar-item--active' : ''}`}
-                        onClick={() => setActiveTab('portal')}
+                        onClick={() => handleTabChange('portal')}
                         title="Portal Data Kependudukan"
                     >
                         <span className="sidebar-item__icon"><BuildingIcon size={18} /></span>
@@ -319,7 +356,7 @@ export default function App() {
                     {/* Menu Item 2: Simulator Keamanan */}
                     <button
                         className={`sidebar-item ${activeTab === 'simulator' ? 'sidebar-item--active' : ''}`}
-                        onClick={() => setActiveTab('simulator')}
+                        onClick={() => handleTabChange('simulator')}
                         title="Simulator Keamanan API"
                     >
                         <span className="sidebar-item__icon"><ShieldIcon size={18} /></span>
@@ -331,7 +368,7 @@ export default function App() {
                     {/* Menu Item 3: Dashboard Monitoring & SOC */}
                     <button
                         className={`sidebar-item ${activeTab === 'monitoring' ? 'sidebar-item--active' : ''}`}
-                        onClick={() => setActiveTab('monitoring')}
+                        onClick={() => handleTabChange('monitoring')}
                         title="Dashboard Monitoring SOC"
                     >
                         <span className="sidebar-item__icon"><RadioTowerIcon size={18} /></span>
@@ -426,8 +463,8 @@ export default function App() {
                             <SimulatorKeamanan
                                 token={token}
                                 tenantId={currentUser.tenant}
+                                currentUser={currentUser}
                                 users={USERS}
-                                onSelectUser={(username) => handleLogin(username)}
                             />
                         </div>
                     )}
