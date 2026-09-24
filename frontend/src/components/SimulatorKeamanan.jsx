@@ -324,6 +324,21 @@ export default function SimulatorKeamanan({ token, tenantId, users, onSelectUser
                                 </div>
                             </div>
 
+                            {/* Contextual Violation Badges */}
+                            {response.data?.context && (
+                                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
+                                    {response.data.context.is_new_ip && (
+                                        <span className="badge badge--warning">IP Baru (+20)</span>
+                                    )}
+                                    {response.data.context.is_off_hours && (
+                                        <span className="badge badge--warning">Luar Jam Kerja (+10)</span>
+                                    )}
+                                    {response.data.context.is_high_velocity && (
+                                        <span className="badge badge--danger">High Velocity (+15)</span>
+                                    )}
+                                </div>
+                            )}
+
                             {/* Blacklist note */}
                             {response.data?.risk_score >= 50 && (
                                 <div className="alert alert--info mt-12" style={{ fontSize: 12 }}>

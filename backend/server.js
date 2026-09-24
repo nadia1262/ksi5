@@ -56,8 +56,22 @@ try {
         },
     });
 
-    redisClient.on('connect', () => {
+    redisClient.on('connect', async () => {
         console.log('[SERVER] ✅ Redis terhubung.');
+        try {
+            const baseIps = ['127.0.0.1', '::1', '::ffff:127.0.0.1'];
+            for (const t of ['3174', '3171', '3201']) {
+                const members = await redisClient.smembers(`known_ips:${t}`);
+                for (const m of members) {
+                    if (m.startsWith('110.50.')) {
+                        await redisClient.srem(`known_ips:${t}`, m);
+                    }
+                }
+                await redisClient.sadd(`known_ips:${t}`, ...baseIps);
+            }
+        } catch (e) {
+            console.warn('[SERVER] Warning initializing known_ips:', e.message);
+        }
     });
 
     redisClient.on('error', (err) => {

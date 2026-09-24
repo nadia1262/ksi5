@@ -56,6 +56,7 @@ function getSigningKey(header, callback) {
 // -------------------------------------------
 async function collectContext(req, redisClient) {
     // 1. IP ADDRESS: Baca dari header simulasi, atau gunakan IP asli
+    const isSimulatedIp = Boolean(req.headers['x-simulated-ip']);
     const ip = req.headers['x-simulated-ip'] || req.ip || '127.0.0.1';
 
     // 2. TIMESTAMP: Baca dari header simulasi, atau gunakan waktu server
@@ -70,20 +71,23 @@ async function collectContext(req, redisClient) {
     const isOffHours = currentHour < 7 || currentHour >= 22;
 
     // 4. IS NEW IP? (IP yang belum pernah terlihat untuk tenant ini)
-    const tenantId = req.jwtPayload?.tenant_id || 'unknown';
+    const rawTenant = req.jwtPayload?.tenant_id;
+    const tenantId = Array.isArray(rawTenant) ? rawTenant[0] : (rawTenant || 'unknown');
     const ipKey = `known_ips:${tenantId}`;
-    let isNewIp = true;
+    let isNewIp = false;
 
-    if (redisClient) {
+    if (isSimulatedIp) {
+        // Jika request membawa X-Simulated-IP (mode 'IP Random' di simulator),
+        // selalu ditandai sebagai IP Baru (+20 skor risiko OPA)
+        // dan JANGAN disimpan ke known_ips Redis agar tidak menetralkan request berikutnya pada serangan intruder
+        isNewIp = true;
+    } else if (redisClient) {
         try {
             const isMember = await redisClient.sismember(ipKey, ip);
             isNewIp = !isMember;
-            // Jika IP baru, tambahkan ke daftar IP yang dikenal
-            if (isNewIp) {
-                await redisClient.sadd(ipKey, ip);
-            }
         } catch (err) {
-            console.warn('[ZT-MIDDLEWARE] Redis error, defaulting isNewIp=true:', err.message);
+            console.warn('[ZT-MIDDLEWARE] Redis error checking IP:', err.message);
+            isNewIp = false;
         }
     }
 
@@ -290,8 +294,17 @@ function createZeroTrustMiddleware(redisClient, io) {
 
                 const originalJson = res.json.bind(res);
                 res.json = (body) => {
-                    if (body && typeof body === 'object' && !Array.isArray(body) && body.risk_score === undefined) {
-                        body.risk_score = decision.risk_score;
+                    if (body && typeof body === 'object' && !Array.isArray(body)) {
+                        if (body.risk_score === undefined) {
+                            body.risk_score = decision.risk_score;
+                        }
+                        if (body.context === undefined) {
+                            body.context = {
+                                is_new_ip: context.is_new_ip,
+                                is_off_hours: context.is_off_hours,
+                                is_high_velocity: context.is_high_velocity,
+                            };
+                        }
                     }
                     return originalJson(body);
                 };
@@ -315,6 +328,11 @@ function createZeroTrustMiddleware(redisClient, io) {
                     error: 'Forbidden',
                     message: `Access Denied. ${decision.block_reason}`,
                     risk_score: decision.risk_score,
+                    context: {
+                        is_new_ip: context.is_new_ip,
+                        is_off_hours: context.is_off_hours,
+                        is_high_velocity: context.is_high_velocity,
+                    },
                 });
             }
         } catch (err) {
